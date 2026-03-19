@@ -102,28 +102,28 @@ shop-agent/
 
 #### 任务清单：
 1. **大模型服务封装**
-   - [ ] 创建`app/services/llm_service.py`
-   - [ ] 实现DeepSeek API调用（OpenAI兼容API）
-   - [ ] 添加流式响应支持（可选）
-   - [ ] 添加错误处理和重试机制
+   - [x] 创建`app/services/llm_service.py`
+   - [x] 实现DeepSeek API调用（OpenAI兼容API）
+   - [x] 添加流式响应支持（可选）
+   - [x] 添加错误处理和重试机制
 
 2. **基础对话API**
-   - [ ] 创建`/api/chat`端点
-   - [ ] 实现简单的对话功能
-   - [ ] 添加请求/响应模型（Pydantic）
+   - [x] 创建`/api/chat`端点
+   - [x] 实现简单的对话功能
+   - [x] 添加请求/响应模型（Pydantic）
 
 3. **测试对话功能**
-   - [ ] 使用curl或Postman测试API
-   - [ ] 验证大模型响应正常
+   - [x] 使用curl或Postman测试API
+   - [x] 验证大模型响应正常
 
 ### 第三阶段：Tool Calling实现（2-3天）
 **目标**：实现订单查询功能，包括数据库和工具调用
 
 #### 任务清单：
 1. **数据库设计**
-   - [ ] 设计订单表结构（订单ID、用户ID、产品、物流状态等）
-   - [ ] 创建SQLAlchemy模型`app/database/models.py`
-   - [ ] 初始化数据库连接
+   - [x] 设计订单表结构（订单ID、用户ID、产品、物流状态等）
+   - [x] 创建SQLAlchemy模型`app/database/models.py`
+   - [x] 初始化数据库连接
 
 2. **订单服务**
    - [ ] 创建`app/services/order_service.py`
