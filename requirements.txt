@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-dotenv
+openai
+chromadb
+sentence-transformers
+sqlalchemy
+pydantic
+pydantic-settings
+httpx
