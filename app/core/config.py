@@ -22,10 +22,11 @@ class Settings(BaseSettings):
     
     # 向量数据库配置
     chroma_db_path: str = "./chroma_db"
-    # faiss_index_path: Optional[str] = None
-    
-    # 可选缓存配置
-    redis_url: Optional[str] = None
+
+    # JWT配置
+    jwt_secret_key: str = "your-secret-key-change-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
     
     class Config:
         env_file = ".env"

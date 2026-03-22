@@ -20,6 +20,7 @@ class User(Base):
     email = Column(String(100), unique=True, nullable=True)
     phone = Column(String(20), nullable=True)
     address = Column(Text, nullable=True)
+    hashed_password = Column(String(64), nullable=False)  # SHA256 哈希
     created_at = Column(DateTime, default=utc_now)
     updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 

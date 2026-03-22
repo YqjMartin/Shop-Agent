@@ -1,12 +1,113 @@
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException
-from app.api.models import ChatRequest, ChatResponse
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
+
+from app.api.models import (
+    ChatRequest, ChatResponse,
+    RegisterRequest, LoginRequest, TokenResponse, UserInfo
+)
 from app.services.llm_service import llm_service
 from app.agents.order_agent import order_agent
 from app.agents.rag_agent import rag_agent
 from app.agents.router_agent import router_agent
+from app.core.security import hash_password, verify_password, create_access_token, get_current_user_id, TokenData
+from app.database import SessionLocal
+from app.database.models import User
 
 router = APIRouter()
+
+
+# ============ 依赖 ============
+
+def get_db():
+    """数据库会话依赖"""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+# ============ 认证端点 ============
+
+@router.post("/auth/register", response_model=TokenResponse)
+async def register(request: RegisterRequest, db: Session = Depends(get_db)):
+    """
+    用户注册接口
+
+    注册新用户并返回 JWT 令牌。
+    """
+    # 检查用户名是否已存在
+    existing_user = db.query(User).filter(User.username == request.username).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="用户名已存在")
+
+    # 创建新用户
+    hashed_pwd = hash_password(request.password)
+    new_user = User(
+        username=request.username,
+        email=request.email,
+        hashed_password=hashed_pwd
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    # 生成 JWT 令牌
+    access_token = create_access_token(data={
+        "sub": str(new_user.id),
+        "username": new_user.username
+    })
+
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user_id=new_user.id,
+        username=new_user.username
+    )
+
+
+@router.post("/auth/login", response_model=TokenResponse)
+async def login(request: LoginRequest, db: Session = Depends(get_db)):
+    """
+    用户登录接口
+
+    验证凭据并返回 JWT 令牌。
+    """
+    # 查找用户
+    user = db.query(User).filter(User.username == request.username).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="用户名或密码错误")
+
+    # 验证密码
+    if not verify_password(request.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="用户名或密码错误")
+
+    # 生成 JWT 令牌
+    access_token = create_access_token(data={
+        "sub": str(user.id),
+        "username": user.username
+    })
+
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user_id=user.id,
+        username=user.username
+    )
+
+
+@router.get("/auth/me", response_model=UserInfo)
+async def get_current_user_info(current_user: TokenData = Depends(get_current_user_id)):
+    """
+    获取当前登录用户信息
+
+    需要在请求头中携带 Bearer token。
+    """
+    return UserInfo(
+        id=current_user.user_id,
+        username=current_user.username
+    )
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -80,8 +181,12 @@ async def chat_order(request: ChatRequest):
                     "content": msg.content
                 })
 
-        # 调用OrderAgent处理
-        result = await order_agent.process(user_message, history)
+        # 调用OrderAgent处理（传入用户ID用于个性化查询）
+        result = await order_agent.process(
+            user_message,
+            history,
+            user_id=request.user_id
+        )
 
         return ChatResponse(
             content=result["content"],
@@ -133,8 +238,12 @@ async def chat_auto(request: ChatRequest):
                     "content": msg.content
                 })
 
-        # 调用Router Agent自动路由
-        result = await router_agent.process(user_message, history)
+        # 调用Router Agent自动路由（传入用户ID用于个性化查询）
+        result = await router_agent.process(
+            user_message,
+            history,
+            user_id=request.user_id
+        )
 
         return ChatResponse(
             content=result["content"],

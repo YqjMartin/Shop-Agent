@@ -2,6 +2,38 @@ from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 
 
+# ============ 认证模型 ============
+
+class RegisterRequest(BaseModel):
+    """用户注册请求"""
+    username: str = Field(..., min_length=3, max_length=50, description="用户名")
+    password: str = Field(..., min_length=6, description="密码")
+    email: Optional[str] = Field(None, description="邮箱")
+
+
+class LoginRequest(BaseModel):
+    """用户登录请求"""
+    username: str = Field(..., description="用户名")
+    password: str = Field(..., description="密码")
+
+
+class TokenResponse(BaseModel):
+    """登录响应"""
+    access_token: str = Field(..., description="JWT访问令牌")
+    token_type: str = Field(default="bearer", description="令牌类型")
+    user_id: int = Field(..., description="用户ID")
+    username: str = Field(..., description="用户名")
+
+
+class UserInfo(BaseModel):
+    """用户信息"""
+    id: int
+    username: str
+    email: Optional[str] = None
+
+
+# ============ 聊天模型 ============
+
 class ChatMessage(BaseModel):
     """聊天消息"""
     role: str = Field(..., description="消息角色: system, user, assistant")
@@ -14,6 +46,7 @@ class ChatRequest(BaseModel):
     temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="温度参数")
     max_tokens: Optional[int] = Field(default=None, description="最大token数")
     system_prompt: Optional[str] = Field(default=None, description="系统提示词")
+    user_id: Optional[int] = Field(default=None, description="用户ID（可选，用于获取用户上下文）")
 
 
 class ChatResponse(BaseModel):

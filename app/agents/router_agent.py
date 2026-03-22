@@ -96,13 +96,19 @@ class RouterAgent(BaseAgent):
             logger.error(f"意图分类失败: {e}")
             return {"intent": "general", "confidence": 0.5, "reason": f"分类出错: {str(e)}"}
 
-    async def process(self, user_message: str, history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
+    async def process(
+        self,
+        user_message: str,
+        history: Optional[List[Dict[str, str]]] = None,
+        user_id: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
         处理用户请求，自动路由到合适的Agent
 
         Args:
             user_message: 用户消息
             history: 对话历史
+            user_id: 当前登录用户ID（可选，用于个性化订单查询）
 
         Returns:
             包含回复内容和路由信息的字典
@@ -117,7 +123,11 @@ class RouterAgent(BaseAgent):
         # 第二步：根据意图路由
         if intent == "order_query":
             logger.info("路由到 OrderAgent")
-            result = await order_agent.process(user_message, history)
+            result = await order_agent.process(
+                user_message,
+                history,
+                user_id=user_id
+            )
             result["intent"] = "order_query"
             result["confidence"] = confidence
             return result

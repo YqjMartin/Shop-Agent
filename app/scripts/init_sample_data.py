@@ -3,30 +3,56 @@ import sys
 sys.path.insert(0, ".")
 
 from datetime import datetime, timedelta, timezone
-from app.database import SessionLocal, init_db
+from app.database import SessionLocal, init_db, drop_db
 from app.database.models import User, Product, Order, OrderItem
+from app.core.security import hash_password
 
 
 def create_sample_data():
-    """创建示例数据"""
+    """创建示例数据（完整重建数据库）"""
+    print("=" * 50)
+    print("开始初始化数据库...")
+    print("=" * 50)
+
+    # 重新创建所有表（确保 schema 最新）
+    print("删除旧表...")
+    drop_db()
+    print("创建新表...")
+    init_db()
+    print("数据库表结构已创建")
+
     db = SessionLocal()
 
     try:
-        # 初始化数据库表
-        init_db()
-        print("数据库表已创建")
-
         # 检查是否已有数据
         existing_users = db.query(User).count()
         if existing_users > 0:
             print(f"数据库已有数据（{existing_users}个用户），跳过初始化")
             return
 
-        # 创建用户
+        # 创建用户（带密码哈希，示例用户密码为 "password123"）
         users = [
-            User(username="zhangsan", email="zhangsan@example.com", phone="13800138000", address="北京市朝阳区"),
-            User(username="lisi", email="lisi@example.com", phone="13900139000", address="上海市浦东新区"),
-            User(username="wangwu", email="wangwu@example.com", phone="13700137000", address="广州市天河区"),
+            User(
+                username="zhangsan",
+                email="zhangsan@example.com",
+                phone="13800138000",
+                address="北京市朝阳区",
+                hashed_password=hash_password("password123")
+            ),
+            User(
+                username="lisi",
+                email="lisi@example.com",
+                phone="13900139000",
+                address="上海市浦东新区",
+                hashed_password=hash_password("password123")
+            ),
+            User(
+                username="wangwu",
+                email="wangwu@example.com",
+                phone="13700137000",
+                address="广州市天河区",
+                hashed_password=hash_password("password123")
+            ),
         ]
         db.add_all(users)
         db.commit()
@@ -133,14 +159,20 @@ def create_sample_data():
         print(f"创建了 {len(order_items)} 个订单商品")
 
         print("\n示例数据初始化完成！")
-        print("\n测试数据：")
-        print("- 用户: zhangsan, lisi, wangwu")
-        print("- 订单号: ORD20240319001, ORD20240320002, ORD20240321003, ORD20240322004, ORD20240323005")
-        print("- 快递单号: SF1234567890, YT9876543210, JD1234567890")
-        print("- 商品: 机械键盘、无线鼠标、显示器、耳机等")
+        print("=" * 50)
+        print("测试账号（示例用户，密码均为 password123）：")
+        print("  - 用户名: zhangsan, lisi, wangwu")
+        print("=" * 50)
+        print("\n订单数据：")
+        print("  - 订单号: ORD20240319001, ORD20240320002, ORD20240321003, ORD20240322004, ORD20240323005")
+        print("  - 快递单号: SF1234567890, YT9876543210, JD1234567890")
+        print("\n产品数据：")
+        print("  - 机械键盘、无线鼠标、显示器、耳机、笔记本电脑等")
 
     except Exception as e:
         print(f"错误: {e}")
+        import traceback
+        traceback.print_exc()
         db.rollback()
     finally:
         db.close()

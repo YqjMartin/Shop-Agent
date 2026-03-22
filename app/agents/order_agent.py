@@ -215,18 +215,41 @@ class OrderAgent(BaseAgent):
         super().__init__()
         self.tools = ORDER_TOOLS
 
-    async def process(self, user_message: str, history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
+    async def process(
+        self,
+        user_message: str,
+        history: Optional[List[Dict[str, str]]] = None,
+        user_id: Optional[int] = None,
+        username: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         处理用户请求，自动判断是否需要调用工具
 
         Args:
             user_message: 用户消息
             history: 对话历史
+            user_id: 当前登录用户ID（可选，用于个性化查询）
+            username: 当前登录用户名（可选）
 
         Returns:
             包含回复内容和是否调用了工具的信息
         """
-        messages = self.build_messages(user_message, self.SYSTEM_PROMPT, history)
+        # 如果提供了 user_id但没有 username，从数据库查询用户名
+        if user_id and not username:
+            db = SessionLocal()
+            try:
+                user = db.query(User).filter(User.id == user_id).first()
+                if user:
+                    username = user.username
+            finally:
+                db.close()
+
+        # 如果提供了用户信息，在系统提示词中添加用户上下文
+        system_prompt = self.SYSTEM_PROMPT
+        if user_id and username:
+            system_prompt = f"{system_prompt}\n\n【当前用户信息】\n用户名: {username}\n用户ID: {user_id}\n\n当用户询问自己的订单时，直接使用 get_user_order_history 工具查询。"
+
+        messages = self.build_messages(user_message, system_prompt, history)
 
         # 第一轮：调用模型，让模型决定是否需要使用工具
         response = await self.chat_with_functions(
