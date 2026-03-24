@@ -77,7 +77,15 @@ def decode_access_token(token: str) -> Optional[dict]:
 
 def _base64url_encode(data: dict) -> str:
     """Base64URL 编码"""
-    json_bytes = __import__('json').dumps(data, separators=(',', ':')).encode()
+    import json
+
+    def json_serial(obj):
+        """处理 datetime 等非JSON序列化对象"""
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+
+    json_bytes = json.dumps(data, separators=(',', ':'), default=json_serial).encode()
     encoded = base64.urlsafe_b64encode(json_bytes).decode()
     # 移除 padding
     return encoded.rstrip('=')

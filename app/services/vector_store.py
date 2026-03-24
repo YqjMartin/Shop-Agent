@@ -1,13 +1,66 @@
 """向量数据库服务 - 使用 ChromaDB 存储和检索向量"""
 
 import csv
+import hashlib
 import logging
 import os
+import time
+from collections import OrderedDict
 from typing import List, Dict, Any, Optional
 import chromadb
 from app.services.embedding_service import embedding_service
 
 logger = logging.getLogger(__name__)
+
+
+class SearchCache:
+    """搜索结果缓存（OrderedDict 实现 O(1) LRU）"""
+
+    def __init__(self, max_size: int = 200, ttl_seconds: int = 600):
+        """
+        Args:
+            max_size: 最大缓存条目数
+            ttl_seconds: 缓存过期时间（秒）
+        """
+        self._cache: OrderedDict[str, tuple[List[Dict[str, Any]], float]] = OrderedDict()
+        self._max_size = max_size
+        self._ttl_seconds = ttl_seconds
+
+    def _make_key(self, query: str, k: int, category_filter: Optional[str]) -> str:
+        """生成缓存键"""
+        key_data = f"{query}:{k}:{category_filter or ''}"
+        return hashlib.sha256(key_data.encode()).hexdigest()
+
+    def get(self, query: str, k: int, category_filter: Optional[str]) -> Optional[List[Dict[str, Any]]]:
+        """获取缓存的搜索结果"""
+        key = self._make_key(query, k, category_filter)
+        if key in self._cache:
+            results, timestamp = self._cache[key]
+            if time.time() - timestamp < self._ttl_seconds:
+                logger.debug(f"搜索缓存命中: {query[:30]}...")
+                self._cache.move_to_end(key)
+                return results
+            else:
+                del self._cache[key]
+        return None
+
+    def set(self, query: str, k: int, category_filter: Optional[str], results: List[Dict[str, Any]]) -> None:
+        """设置缓存"""
+        key = self._make_key(query, k, category_filter)
+        if key in self._cache:
+            self._cache.move_to_end(key)
+        else:
+            if len(self._cache) >= self._max_size:
+                self._cache.popitem(last=False)
+        self._cache[key] = (results, time.time())
+
+    def clear(self) -> None:
+        """清空缓存"""
+        self._cache.clear()
+
+    def size(self) -> int:
+        """获取缓存大小"""
+        return len(self._cache)
 
 
 class VectorStore:
@@ -25,6 +78,7 @@ class VectorStore:
 
         self.client = chromadb.PersistentClient(path=persist_directory)
         self.collection = None
+        self.search_cache = SearchCache(max_size=200, ttl_seconds=600)
 
     def get_or_create_collection(self, name: str = "products"):
         """获取或创建集合"""
@@ -115,7 +169,7 @@ class VectorStore:
         self, query: str, k: int = 5, category_filter: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
-        搜索相似产品
+        搜索相似产品（带缓存）
 
         Args:
             query: 查询文本
@@ -125,6 +179,11 @@ class VectorStore:
         Returns:
             相似产品列表
         """
+        # 检查缓存
+        cached = self.search_cache.get(query, k, category_filter)
+        if cached is not None:
+            return cached
+
         if self.collection is None:
             self.get_or_create_collection("products")
 
@@ -158,6 +217,9 @@ class VectorStore:
                     }
                 )
 
+        # 缓存结果
+        self.search_cache.set(query, k, category_filter, similar_products)
+
         return similar_products
 
     def get_product_count(self) -> int:
@@ -165,6 +227,18 @@ class VectorStore:
         if self.collection is None:
             self.get_or_create_collection("products")
         return self.collection.count()
+
+    def get_cache_stats(self) -> dict:
+        """获取缓存统计"""
+        return {
+            "search_cache_size": self.search_cache.size(),
+            "embedding_cache_size": embedding_service.cache.size(),
+        }
+
+    def clear_cache(self) -> None:
+        """清空所有缓存"""
+        self.search_cache.clear()
+        embedding_service.cache.clear()
 
 
 # 全局实例

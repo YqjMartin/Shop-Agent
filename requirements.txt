@@ -8,3 +8,6 @@ sqlalchemy
 pydantic
 pydantic-settings
 httpx
+psutil
+streamlit
+requests
