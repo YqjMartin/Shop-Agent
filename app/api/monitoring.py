@@ -1,4 +1,5 @@
 """监控端点"""
+import os
 import psutil
 from fastapi import APIRouter
 from app.middleware.rate_limit import get_rate_limit_store, RATE_LIMIT_REQUESTS, RATE_LIMIT_WINDOW
@@ -6,14 +7,24 @@ from app.middleware.rate_limit import get_rate_limit_store, RATE_LIMIT_REQUESTS,
 router = APIRouter()
 
 
+def _get_disk_usage() -> psutil.sdiskusage:
+    """跨平台获取系统盘使用率"""
+    if os.name == "nt":
+        drive = os.path.splitdrive(os.getcwd())[0] or "C:\\"
+        return psutil.disk_usage(drive)
+    else:
+        return psutil.disk_usage("/")
+
+
 @router.get("/health")
 async def health_check():
     """健康检查端点"""
+    disk = _get_disk_usage()
     return {
         "status": "healthy",
         "cpu_percent": psutil.cpu_percent(),
         "memory_percent": psutil.virtual_memory().percent,
-        "disk_percent": psutil.disk_usage("/").percent
+        "disk_percent": disk.percent,
     }
 
 

@@ -11,21 +11,10 @@ from app.agents.order_agent import order_agent
 from app.agents.rag_agent import rag_agent
 from app.agents.router_agent import router_agent
 from app.core.security import hash_password, verify_password, create_access_token, get_current_user_id, TokenData
-from app.database import SessionLocal
+from app.database import SessionLocal, get_db
 from app.database.models import User
 
 router = APIRouter()
-
-
-# ============ 依赖 ============
-
-def get_db():
-    """数据库会话依赖"""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 # ============ 认证端点 ============

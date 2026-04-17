@@ -6,30 +6,48 @@
 
 ## 第一阶段：安全与关键缺陷修复（紧急）
 
-### 1. 密码哈希方式不安全
+### 1. 密码哈希方式不安全（暂缓）
 - **文件**: `app/core/security.py`
 - **问题**: 使用 `hashlib.sha256` 做密码哈希，SHA256 是快速哈希，极易被暴力破解和彩虹表攻击。
 - **修复**: 改用 `bcrypt` 或 `argon2-cffi`，并加装 salt。`requirements.txt` 需新增对应依赖。
+- **状态**: ⏸️ 用户要求暂不修复
+- **风险**: 中
 
-### 2. JWT 实现是伪签名，无加密保护
+### 2. JWT 无签名验证（暂缓）
 - **文件**: `app/core/security.py`
 - **问题**: `create_access_token` 和 `decode_access_token` 仅做 base64 编解码，**没有签名和验证**。任何人都能伪造 token、篡改 payload。
 - **修复**: 使用 `PyJWT` 或 `python-jose` 库实现标准 JWT 签发与验证，用 `jwt_secret_key` 做 HMAC 签名。
+- **状态**: ⏸️ 用户要求暂不修复
+- **风险**: 高 - 认证机制完全失效
 
 ### 3. JWT 密钥有硬编码默认值
 - **文件**: `app/core/config.py`
 - **问题**: `jwt_secret_key` 默认值为 `"your-secret-key-change-in-production"`，部署时极易遗漏。
 - **修复**: 去掉默认值，设为必填项；启动时检测是否为占位值并拒绝启动。
+- **状态**: ✅ 已完成
+- **改动**：
+  - `config.py`: `jwt_secret_key: str`（移除默认值）
+  - `main.py`: 新增 `validate_required_settings()`，启动前校验配置
 
 ### 4. SiliconFlow API Key 未设为必填
 - **文件**: `app/core/config.py`
 - **问题**: `siliconflow_api_key` 为 `Optional[str] = None`，但 `embedding_service.py` 初始化时直接用它创建 client，为 None 时会在运行时崩溃。
 - **修复**: 将其设为必填字段，或在 embedding_service 中做显式检查并给出清晰错误提示。
+- **状态**: ✅ 已完成
+- **改动**：`config.py`: `siliconflow_api_key: str`（移除 Optional）
 
 ### 5. .env.example 缺少关键配置
 - **文件**: `.env.example`
 - **问题**: 缺少 `JWT_SECRET_KEY`、`SILICONFLOW_API_KEY`、`APP_NAME` 等必填项。
 - **修复**: 补全所有 .env 支持的配置项及说明。
+- **状态**: ✅ 已完成
+- **改动**：新增 `APP_NAME`、`JWT_SECRET_KEY`、`SILICONFLOW_API_KEY` 配置项及注释
+
+### 32. 缺少启动配置校验
+- **文件**: `app/main.py`
+- **问题**: 应用启动时不检查必要环境变量，运行时才报错。
+- **修复**: 在 lifespan 启动前新增 `validate_required_settings()` 函数，校验 JWT 密钥、SiliconFlow API Key、AI API Key 三项必填配置，缺失或仍为默认值时记录错误日志并抛出 `RuntimeError` 阻止启动。
+- **状态**: ✅ 已完成
 
 ---
 

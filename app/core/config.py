@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     ai_base_url: str = "https://api.deepseek.com"
     ai_model: str = "deepseek-chat"
 
-    # SiliconFlow 配置 (用于 embeddings)
-    siliconflow_api_key: Optional[str] = None
+    # SiliconFlow 配置 (用于 embeddings) - 必填
+    siliconflow_api_key: str
     
     # 数据库配置
     database_url: str = "sqlite:///./data/shop_agent.db"
@@ -23,8 +23,8 @@ class Settings(BaseSettings):
     # 向量数据库配置
     chroma_db_path: str = "./data/chroma_db"
 
-    # JWT配置
-    jwt_secret_key: str = "your-secret-key-change-in-production"
+    # JWT配置 - 必填，生产环境必须更换
+    jwt_secret_key: str
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
     

@@ -43,7 +43,7 @@ class LLMService:
                     "content": response.choices[0].message.content,
                     "role": response.choices[0].message.role,
                     "finish_reason": response.choices[0].finish_reason,
-                    "usage": response.usage.dict() if response.usage else None,
+                    "usage": response.usage.model_dump() if response.usage else None,
                 }
 
         except Exception as e:
@@ -89,7 +89,7 @@ class LLMService:
                 "content": message.content,
                 "role": message.role,
                 "finish_reason": response.choices[0].finish_reason,
-                "usage": response.usage.dict() if response.usage else None,
+                "usage": response.usage.model_dump() if response.usage else None,
             }
 
             # 检查是否有函数调用 (tool_calls)

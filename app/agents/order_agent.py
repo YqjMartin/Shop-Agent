@@ -26,15 +26,12 @@ def get_order_by_number(order_number: str) -> str:
     Returns:
         订单详细信息，包括订单状态、物流状态、快递单号、商品列表等
     """
-    db = SessionLocal()
-    try:
+    with SessionLocal() as db:
         result = get_order_status(db, order_number=order_number)
         if result:
             return json.dumps(result, ensure_ascii=False, indent=2)
         else:
             return f"未找到订单号为 {order_number} 的订单"
-    finally:
-        db.close()
 
 
 def get_order_by_tracking(tracking_number: str) -> str:
@@ -47,15 +44,12 @@ def get_order_by_tracking(tracking_number: str) -> str:
     Returns:
         订单的物流信息，包括订单状态、发货时间、预计送达时间等
     """
-    db = SessionLocal()
-    try:
+    with SessionLocal() as db:
         result = get_order_status(db, tracking_number=tracking_number)
         if result:
             return json.dumps(result, ensure_ascii=False, indent=2)
         else:
             return f"未找到快递单号为 {tracking_number} 的订单"
-    finally:
-        db.close()
 
 
 def search_product_orders(product_name: str) -> str:
@@ -68,15 +62,12 @@ def search_product_orders(product_name: str) -> str:
     Returns:
         包含该商品的所有订单列表
     """
-    db = SessionLocal()
-    try:
+    with SessionLocal() as db:
         results = search_orders_by_product(db, product_name)
         if results:
             return json.dumps(results, ensure_ascii=False, indent=2)
         else:
             return f"未找到包含商品 '{product_name}' 的订单"
-    finally:
-        db.close()
 
 
 def get_user_order_history(username: str) -> str:
@@ -89,8 +80,7 @@ def get_user_order_history(username: str) -> str:
     Returns:
         该用户的所有订单列表
     """
-    db = SessionLocal()
-    try:
+    with SessionLocal() as db:
         user = db.query(User).filter(User.username == username).first()
         if not user:
             return f"未找到用户名为 {username} 的用户"
@@ -109,8 +99,6 @@ def get_user_order_history(username: str) -> str:
             })
 
         return json.dumps(order_list, ensure_ascii=False, indent=2)
-    finally:
-        db.close()
 
 
 # 工具列表定义
@@ -258,37 +246,54 @@ class OrderAgent(BaseAgent):
             temperature=0.7
         )
 
-        # 检查是否有函数调用
+        # 检查是否有函数调用（可能返回多个 tool_calls）
         if "function_call" in response:
-            function_call = response["function_call"]
-            function_name = function_call["name"]
-            arguments = json.loads(function_call["arguments"])
+            function_calls = []
+            if "function_call" in response:
+                # 单个 function_call 格式（兼容性处理）
+                function_calls.append(response["function_call"])
 
-            logger.info(f"调用工具: {function_name}, 参数: {arguments}")
+            # 执行所有工具
+            tool_results = []
+            for idx, function_call in enumerate(function_calls):
+                function_name = function_call["name"]
+                arguments = json.loads(function_call["arguments"])
 
-            # 执行工具函数
-            tool_result = self._execute_tool(function_name, arguments)
+                logger.info(f"调用工具: {function_name}, 参数: {arguments}")
 
-            # 将工具结果添加到消息中
+                # 执行工具函数
+                tool_result = self._execute_tool(function_name, arguments)
+                tool_results.append({
+                    "tool_call_id": f"call_{idx}",
+                    "name": function_name,
+                    "arguments": function_call["arguments"],
+                    "content": tool_result
+                })
+
+            # 添加 assistant 消息（包含所有 tool_calls）
             messages.append({
                 "role": "assistant",
                 "tool_calls": [
                     {
-                        "id": "call_1",
+                        "id": tr["tool_call_id"],
                         "type": "function",
                         "function": {
-                            "name": function_name,
-                            "arguments": function_call["arguments"]
+                            "name": tr["name"],
+                            "arguments": tr["arguments"]
                         }
                     }
+                    for tr in tool_results
                 ]
             })
-            messages.append({
-                "role": "tool",
-                "tool_call_id": "call_1",
-                "name": function_name,
-                "content": tool_result
-            })
+
+            # 添加所有工具结果消息
+            for tr in tool_results:
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tr["tool_call_id"],
+                    "name": tr["name"],
+                    "content": tr["content"]
+                })
 
             # 第二轮：让模型根据工具结果生成最终回复
             final_response = await self.chat_with_functions(
@@ -300,8 +305,8 @@ class OrderAgent(BaseAgent):
             return {
                 "content": final_response.get("content", "处理完成"),
                 "tool_used": True,
-                "tool_name": function_name,
-                "tool_result": tool_result
+                "tool_name": [tr["name"] for tr in tool_results],
+                "tool_result": [tr["content"] for tr in tool_results]
             }
         else:
             # 无需调用工具，直接返回回复

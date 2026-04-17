@@ -1,8 +1,6 @@
 """Streamlit聊天界面 - 调用后端API"""
 import streamlit as st
 import requests
-import json
-from datetime import datetime
 
 # 配置
 API_BASE_URL = "http://localhost:8000"

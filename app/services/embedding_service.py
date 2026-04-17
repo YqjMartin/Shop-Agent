@@ -133,11 +133,11 @@ class EmbeddingService:
                 response = await self.client.embeddings.create(
                     model=self.model, input=uncached_texts
                 )
-                embeddings_dict = {e.index: e.embedding for e in response.data}
-                for idx, i in enumerate(uncached_indices):
-                    embedding = embeddings_dict[idx]
-                    result[i] = embedding
-                    self.cache.set(texts[i], embedding)
+                # API 返回顺序与请求顺序一致，直接按索引对应
+                for idx, embedding_data in enumerate(response.data):
+                    i = uncached_indices[idx]
+                    result[i] = embedding_data.embedding
+                    self.cache.set(texts[i], embedding_data.embedding)
             except Exception as e:
                 logger.error(f"批量生成嵌入失败: {e}")
                 raise
