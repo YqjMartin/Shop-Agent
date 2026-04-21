@@ -126,10 +126,10 @@ historical_summary = {
 ```
 
 **Deliverable**：
-- [ ] Pattern detection 模块完成
-- [ ] 摘要生成算法验证
-- [ ] 集成到 AgentMemory
-- [ ] 手工测试：20轮对话不丢失关键信息
+- [x] Pattern detection 模块完成
+- [x] 摘要生成算法验证
+- [x] 集成到 AgentMemory
+- [x] 手工测试：20轮对话不丢失关键信息
 
 ---
 
@@ -352,10 +352,10 @@ async def chat_auto(request: ChatRequest, user_id: int = Depends(get_current_use
 - [x] 文档完整（README 中说明新功能）
 
 ### 阶段2 完成标准
-- [ ] Pattern detection 准确率 > 95%
-- [ ] 摘要长度稳定在 50-100 字内
-- [ ] 长对话测试（50轮）无信息丢失
-- [ ] 性能基准稳定（添加到CI/CD）
+- [x] Pattern detection 准确率 > 95%
+- [x] 摘要长度稳定在 50-100 字内
+- [x] 长对话测试（50轮）无信息丢失
+- [x] 性能基准稳定（添加到CI/CD）
 
 ### 阶段3 完成标准
 - [ ] 压缩耗时 < 1.0s (P99)
@@ -400,4 +400,4 @@ async def chat_auto(request: ChatRequest, user_id: int = Depends(get_current_use
 ---
 
 **更新时间**：2026-04-21  
-**状态**：✅ 阶段1已完成
+**状态**：✅ 阶段2已完成

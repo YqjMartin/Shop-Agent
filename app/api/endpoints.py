@@ -183,7 +183,7 @@ async def chat_order(request: ChatRequest):
         # 将前端发送的完整历史加载到记忆中
         for msg in history_messages:
             if msg.role in ["user", "assistant"]:
-                mode = "order_agent"
+                mode = AgentMemory.detect_mode(msg.content)
                 memory.add_interaction(role=msg.role, content=msg.content, mode=mode)
 
         # ========== 步骤2：获取压缩后的历史 ==========
@@ -198,7 +198,7 @@ async def chat_order(request: ChatRequest):
 
         # ========== 步骤4：记录Agent的响应到记忆 ==========
         memory.add_interaction(
-            role="assistant", content=result["content"], mode="tool_calling"
+            role="assistant", content=result["content"], mode="order_query"
         )
 
         # ========== 步骤5：返回结果 ==========
@@ -252,8 +252,7 @@ async def chat_auto(request: ChatRequest):
         # 将前端发送的完整历史加载到记忆中
         for msg in history_messages:
             if msg.role in ["user", "assistant"]:
-                # 推断模式（实际可以从response中获取，这里简化处理）
-                mode = "general"
+                mode = AgentMemory.detect_mode(msg.content)
                 memory.add_interaction(role=msg.role, content=msg.content, mode=mode)
 
         # ========== 步骤2：获取压缩后的历史用于意图分类 ==========
@@ -312,7 +311,7 @@ async def chat_product(request: ChatRequest):
         # 将前端发送的完整历史加载到记忆中
         for msg in history_messages:
             if msg.role in ["user", "assistant"]:
-                mode = "rag_agent"
+                mode = AgentMemory.detect_mode(msg.content)
                 memory.add_interaction(role=msg.role, content=msg.content, mode=mode)
 
         # ========== 步骤2：获取压缩后的历史 ==========
@@ -325,7 +324,7 @@ async def chat_product(request: ChatRequest):
 
         # ========== 步骤4：记录Agent的响应到记忆 ==========
         memory.add_interaction(
-            role="assistant", content=result["content"], mode="rag_agent"
+            role="assistant", content=result["content"], mode="product_recommend"
         )
 
         # ========== 步骤5：返回结果 ==========

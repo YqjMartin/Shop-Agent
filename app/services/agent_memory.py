@@ -9,8 +9,8 @@ Agent 记忆管理模块
 这样可以显著降低 LLM 处理的 Token 数量，同时保留关键上下文。
 """
 
-import json
 import logging
+import re
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
@@ -88,10 +88,279 @@ class AgentMemory:
     MAX_HISTORY_LENGTH = 20  # 总历史最大轮数
     TARGET_CHAR_LENGTH = 2000  # 目标字符限制
 
+    ORDER_KEYWORDS = [
+        "订单",
+        "物流",
+        "快递",
+        "发货",
+        "签收",
+        "配送",
+        "tracking",
+        "shipment",
+        "delivery",
+    ]
+    PRODUCT_KEYWORDS = [
+        "推荐",
+        "商品",
+        "产品",
+        "购买",
+        "性价比",
+        "预算",
+        "category",
+        "price",
+    ]
+    CATEGORY_KEYWORDS = {
+        "电子产品": ["键盘", "鼠标", "耳机", "显示器", "手机", "电脑", "充电器"],
+        "家电": ["冰箱", "空调", "洗衣机", "吸尘器"],
+        "服饰": ["外套", "鞋", "裤", "T恤", "卫衣"],
+    }
+
     def __init__(self):
         """初始化记忆"""
         self.history: List[InteractionRecord] = []
         self.summary_text: Optional[str] = None  # 历史摘要（用于LLM压缩）
+        self.historical_summary: Dict[str, Any] = {
+            "order_queries": [],
+            "products_viewed": [],
+            "user_preferences": {},
+        }
+
+    @classmethod
+    def detect_mode(cls, message: str, response: Optional[str] = None) -> str:
+        """根据消息和响应内容检测对话模式。"""
+        text = f"{message} {response or ''}".lower()
+
+        if re.search(r"ORD[0-9A-Za-z-]*", text, flags=re.IGNORECASE):
+            return "order_query"
+        if re.search(r"(?:SF|YT|ZT|JD|EMS)[0-9A-Za-z-]*", text, flags=re.IGNORECASE):
+            return "order_query"
+        if any(keyword in text for keyword in cls.ORDER_KEYWORDS):
+            return "order_query"
+        if any(keyword in text for keyword in cls.PRODUCT_KEYWORDS):
+            return "product_recommend"
+        return "general"
+
+    @classmethod
+    def extract_key_info(cls, mode: str, content: str) -> Dict[str, Any]:
+        """按模式提取关键信息。"""
+        info: Dict[str, Any] = {}
+
+        if mode == "order_query":
+            order_numbers = re.findall(
+                r"ORD[0-9A-Za-z-]*", content, flags=re.IGNORECASE
+            )
+            tracking_numbers = re.findall(
+                r"(?:SF|YT|ZT|JD|EMS)[0-9A-Za-z-]*", content, flags=re.IGNORECASE
+            )
+            status_match = re.search(
+                r"已发货|待发货|运输中|派送中|已签收|已取消|shipped|delivered|pending",
+                content,
+                flags=re.IGNORECASE,
+            )
+            eta_match = re.search(
+                r"明天|后天|\d+天(内|后)?|预计[^，。\n]*到达",
+                content,
+                flags=re.IGNORECASE,
+            )
+
+            if order_numbers:
+                info["order_numbers"] = sorted(set(order_numbers))
+            if tracking_numbers:
+                info["tracking_numbers"] = sorted(set(tracking_numbers))
+            if status_match:
+                info["status"] = status_match.group(0)
+            if eta_match:
+                info["eta"] = eta_match.group(0)
+
+        if mode == "product_recommend":
+            budget_values = re.findall(r"(\d{2,5})\s*(?:元|块|rmb|RMB|¥)", content)
+            if budget_values:
+                # 只保留最近提到的预算
+                info["budget"] = f"{budget_values[-1]}元"
+
+            categories = []
+            for category, keywords in cls.CATEGORY_KEYWORDS.items():
+                if any(word in content for word in keywords):
+                    categories.append(category)
+            if categories:
+                info["categories"] = sorted(set(categories))
+
+            product_tokens = re.findall(r"[\u4e00-\u9fffA-Za-z0-9]{2,20}", content)
+            stop_words = {
+                "推荐",
+                "商品",
+                "产品",
+                "预算",
+                "以内",
+                "可以",
+                "一个",
+                "这个",
+                "那个",
+            }
+            product_names = [
+                token
+                for token in product_tokens
+                if token not in stop_words and not token.isdigit() and len(token) >= 2
+            ]
+            if product_names:
+                info["product_names"] = product_names[:5]
+
+        return info
+
+    def _merge_metadata(
+        self, extracted: Dict[str, Any], metadata: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        merged = dict(metadata)
+        for key, value in extracted.items():
+            if key not in merged:
+                merged[key] = value
+        return merged
+
+    @staticmethod
+    def _format_relative_time(ts: datetime) -> str:
+        delta = datetime.now() - ts
+        minutes = int(delta.total_seconds() // 60)
+        if minutes < 1:
+            return "刚刚"
+        if minutes < 60:
+            return f"{minutes}分钟前"
+        hours = minutes // 60
+        if hours < 24:
+            return f"{hours}小时前"
+        return f"{hours // 24}天前"
+
+    def build_historical_summary(self) -> Dict[str, Any]:
+        """基于历史对话构建结构化摘要。"""
+        if len(self.history) <= self.FULL_RECENT_TURNS:
+            return self.historical_summary
+
+        old_records = self.history[: -self.FULL_RECENT_TURNS]
+
+        order_queries = []
+        products_viewed = []
+        budgets = []
+        category_counter: Dict[str, int] = {}
+
+        for record in old_records:
+            mode = record.mode
+            if mode == "general":
+                mode = self.detect_mode(record.content)
+
+            extracted = self.extract_key_info(mode, record.content)
+            merged_info = self._merge_metadata(extracted, record.metadata)
+
+            if mode == "order_query":
+                item: Dict[str, Any] = {
+                    "last_ask_time": self._format_relative_time(record.timestamp)
+                }
+                if merged_info.get("order_numbers"):
+                    item["order_id"] = merged_info["order_numbers"][0]
+                if merged_info.get("tracking_numbers"):
+                    item["tracking_id"] = merged_info["tracking_numbers"][0]
+                if merged_info.get("status"):
+                    item["status"] = merged_info["status"]
+                if merged_info.get("eta"):
+                    item["eta"] = merged_info["eta"]
+                if len(item) > 1:
+                    order_queries.append(item)
+
+            if mode == "product_recommend":
+                product_item: Dict[str, Any] = {
+                    "last_ask_time": self._format_relative_time(record.timestamp)
+                }
+                names = merged_info.get("product_names") or []
+                if names:
+                    product_item["name"] = names[0]
+                categories = merged_info.get("categories") or []
+                if categories:
+                    product_item["category"] = categories[0]
+                    for category in categories:
+                        category_counter[category] = (
+                            category_counter.get(category, 0) + 1
+                        )
+                if merged_info.get("budget"):
+                    budgets.append(merged_info["budget"])
+                    product_item["price_range"] = merged_info["budget"]
+                if len(product_item) > 1:
+                    products_viewed.append(product_item)
+
+        dedup_order = []
+        seen_order_keys = set()
+        for item in order_queries:
+            key = (item.get("order_id"), item.get("tracking_id"), item.get("status"))
+            if key in seen_order_keys:
+                continue
+            seen_order_keys.add(key)
+            dedup_order.append(item)
+
+        dedup_products = []
+        seen_product_keys = set()
+        for item in products_viewed:
+            key = (item.get("name"), item.get("category"), item.get("price_range"))
+            if key in seen_product_keys:
+                continue
+            seen_product_keys.add(key)
+            dedup_products.append(item)
+
+        user_preferences: Dict[str, Any] = {}
+        if budgets:
+            user_preferences["budget"] = budgets[-1]
+        if category_counter:
+            top_category = max(category_counter, key=category_counter.get)
+            user_preferences["category"] = top_category
+
+        self.historical_summary = {
+            "order_queries": dedup_order[:5],
+            "products_viewed": dedup_products[:5],
+            "user_preferences": user_preferences,
+        }
+        return self.historical_summary
+
+    def format_historical_summary(self) -> str:
+        """将结构化摘要格式化为可注入提示词的文本。"""
+        summary = self.build_historical_summary()
+        lines: List[str] = []
+
+        if summary["order_queries"]:
+            items = []
+            for item in summary["order_queries"][:3]:
+                parts = []
+                if item.get("order_id"):
+                    parts.append(item["order_id"])
+                if item.get("tracking_id"):
+                    parts.append(item["tracking_id"])
+                if item.get("status"):
+                    parts.append(item["status"])
+                if item.get("eta"):
+                    parts.append(item["eta"])
+                if parts:
+                    items.append(
+                        "(".join([parts[0], "，".join(parts[1:]) + ")"])
+                        if len(parts) > 1
+                        else parts[0]
+                    )
+            if items:
+                lines.append(f"- 最近查询的订单：{'；'.join(items)}")
+
+        if summary["products_viewed"]:
+            names = [
+                item.get("name")
+                for item in summary["products_viewed"][:5]
+                if item.get("name")
+            ]
+            if names:
+                lines.append(f"- 浏览或咨询的商品：{'、'.join(names)}")
+
+        prefs = summary.get("user_preferences", {})
+        pref_parts = []
+        if prefs.get("budget"):
+            pref_parts.append(f"预算{prefs['budget']}")
+        if prefs.get("category"):
+            pref_parts.append(f"偏好{prefs['category']}")
+        if pref_parts:
+            lines.append(f"- 用户偏好：{'，'.join(pref_parts)}")
+
+        return "\n".join(lines)
 
     def add_interaction(
         self,
@@ -109,11 +378,23 @@ class AgentMemory:
             mode: 交互模式
             metadata: 元数据
         """
+        detected_mode = mode
+        if detected_mode == "general":
+            detected_mode = self.detect_mode(content)
+
+        extracted_info = self.extract_key_info(detected_mode, content)
+        merged_metadata = self._merge_metadata(extracted_info, metadata or {})
+
         record = InteractionRecord(
-            role=role, content=content, mode=mode, metadata=metadata
+            role=role,
+            content=content,
+            mode=detected_mode,
+            metadata=merged_metadata,
         )
         self.history.append(record)
-        logger.debug(f"Added interaction: {role} ({mode}) - {len(content)} chars")
+        logger.debug(
+            f"Added interaction: {role} ({detected_mode}) - {len(content)} chars"
+        )
 
     def get_recent_turns(self, n: int = 3) -> List[Dict[str, str]]:
         """获取最近N轮（完整保留）"""
@@ -168,8 +449,16 @@ class AgentMemory:
         target_length = target_length or self.TARGET_CHAR_LENGTH
         messages = []
 
-        # 1. 如果有全局摘要，加入系统提示
-        if self.summary_text:
+        # 1. 优先加入结构化历史摘要
+        structured_summary = self.format_historical_summary()
+        if structured_summary:
+            messages.append(
+                {
+                    "role": "system",
+                    "content": f"【用户概览摘要】\n{structured_summary}\n\n【最近对话】",
+                }
+            )
+        elif self.summary_text:
             messages.append(
                 {
                     "role": "system",
@@ -208,6 +497,7 @@ class AgentMemory:
         return {
             "history": [r.to_dict() for r in self.history],
             "summary_text": self.summary_text,
+            "historical_summary": self.historical_summary,
             "timestamp": datetime.now().isoformat(),
         }
 
@@ -222,6 +512,11 @@ class AgentMemory:
 
         if "summary_text" in data:
             memory.summary_text = data["summary_text"]
+
+        if "historical_summary" in data and isinstance(
+            data["historical_summary"], dict
+        ):
+            memory.historical_summary = data["historical_summary"]
 
         logger.info(f"Memory restored: {len(memory.history)} interactions")
         return memory
@@ -241,6 +536,7 @@ class AgentMemory:
             ),
             "mode_distribution": mode_counts,
             "has_summary": self.summary_text is not None,
+            "historical_summary": self.historical_summary,
         }
 
     def __len__(self) -> int:
