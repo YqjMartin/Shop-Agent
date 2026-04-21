@@ -1,12 +1,13 @@
 # Shop Agent - 电商管理客服系统
 
-基于RAG和Agent的极简版电商管理客服系统，面向实习招聘丰富简历。
+基于RAG和Agent的极简版电商管理客服系统
 
 ## 功能特性
 
 - **大模型对话**: 集成DeepSeek大模型API (OpenAI兼容)
 - **Tool Calling**: 订单查询物流状态
 - **RAG产品推荐**: 基于向量检索的产品推荐
+- **AgentMemory（阶段1）**: 对话历史压缩（最近3轮完整 + 历史摘要），降低长对话上下文开销
 - **Web API**: FastAPI提供RESTful接口
 
 ## 项目结构
@@ -65,7 +66,17 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ## API端点
 
 - `POST /api/chat`: 对话接口
+- `POST /api/chat/auto`: 统一路由对话（已接入AgentMemory压缩）
+- `POST /api/chat/order`: 订单查询对话（已接入AgentMemory压缩）
+- `POST /api/chat/product`: 产品推荐对话（已接入AgentMemory压缩）
 - `GET /health`: 健康检查
+
+## 测试
+
+```bash
+# Windows (PowerShell) 使用项目虚拟环境运行第一阶段单测
+.\.venv\Scripts\python.exe -m pytest tests/test_agent_memory.py -q
+```
 
 ## 开发计划
 
@@ -80,6 +91,3 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - **SQLAlchemy** - ORM
 - **Pydantic** - 数据验证
 
-## 许可证
-
-MIT
