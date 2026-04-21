@@ -1,4 +1,5 @@
 from typing import List, Optional
+import re
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 
@@ -26,6 +27,28 @@ from app.database import SessionLocal, get_db
 from app.database.models import User
 
 router = APIRouter()
+
+
+def _should_force_order_route(user_message: str, user_id: Optional[int]) -> bool:
+    """已登录用户的强订单意图兜底，避免路由误判。"""
+    if not user_message or not user_id:
+        return False
+
+    text = user_message.strip()
+    if re.search(r"ORD[0-9A-Za-z-]*", text, flags=re.IGNORECASE):
+        return True
+    if re.search(r"(?:SF|YT|ZT|JD|EMS)[0-9A-Za-z-]*", text, flags=re.IGNORECASE):
+        return True
+
+    keywords = [
+        "我的订单",
+        "我最近的订单",
+        "我的快递",
+        "订单到哪里",
+        "订单状态",
+        "物流",
+    ]
+    return any(k in text for k in keywords)
 
 
 def _extract_user_message_and_history(request: ChatRequest) -> tuple[str, list]:
@@ -264,12 +287,25 @@ async def chat_auto(request: ChatRequest):
         # ========== 步骤2：获取压缩后的历史用于意图分类 ==========
         compressed_history = memory.get_compressed_history()
 
-        # ========== 步骤3：调用Router Agent自动路由 ==========
-        result = await router_agent.process(
-            user_message,
-            compressed_history,  # 使用压缩后的历史
-            user_id=request.user_id,
-        )
+        # ========== 步骤3：调用Router Agent自动路由（含订单兜底） ==========
+        if _should_force_order_route(user_message, request.user_id):
+            ordered = await order_agent.process(
+                user_message,
+                compressed_history,
+                user_id=request.user_id,
+            )
+            result = {
+                "content": ordered.get("content", ""),
+                "tool_used": ordered.get("tool_used", False),
+                "tool_name": ordered.get("tool_name"),
+                "intent": "order_query",
+            }
+        else:
+            result = await router_agent.process(
+                user_message,
+                compressed_history,  # 使用压缩后的历史
+                user_id=request.user_id,
+            )
 
         # ========== 步骤4：记录Agent的响应到记忆 ==========
         intent = result.get("intent", "general")

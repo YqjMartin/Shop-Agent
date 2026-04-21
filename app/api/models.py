@@ -67,7 +67,9 @@ class ChatResponse(BaseModel):
     finish_reason: Optional[str] = Field(default=None, description="结束原因")
     usage: Optional[Dict[str, Any]] = Field(default=None, description="token使用量")
     tool_used: Optional[bool] = Field(default=False, description="是否使用了工具调用")
-    tool_name: Optional[str] = Field(default=None, description="使用的工具名称")
+    tool_name: Optional[List[str]] = Field(
+        default=None, description="使用的工具名称列表"
+    )
     intent: Optional[str] = Field(
         default=None,
         description="识别的用户意图: order_query, product_recommend, general",

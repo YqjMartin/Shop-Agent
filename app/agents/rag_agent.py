@@ -94,7 +94,7 @@ class RAGAgent(BaseAgent):
             "content": content,
             "products": products,
             "tool_used": True,
-            "tool_name": "product_search",
+            "tool_name": ["product_search"],
         }
 
     def _build_product_context(self, products: List[Dict[str, Any]]) -> str:

@@ -6,7 +6,7 @@ from app.agents.base_agent import BaseAgent
 from app.services.order_service import (
     get_order_status,
     search_orders_by_product,
-    get_user_orders
+    get_user_orders,
 )
 from app.database import SessionLocal
 from app.database.models import User
@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 # ============ 工具定义 ============
+
 
 def get_order_by_number(order_number: str) -> str:
     """
@@ -91,12 +92,16 @@ def get_user_order_history(username: str) -> str:
 
         order_list = []
         for order in orders:
-            order_list.append({
-                "order_number": order.order_number,
-                "status": order.status,
-                "total_amount": order.total_amount,
-                "created_at": order.created_at.isoformat() if order.created_at else None
-            })
+            order_list.append(
+                {
+                    "order_number": order.order_number,
+                    "status": order.status,
+                    "total_amount": order.total_amount,
+                    "created_at": (
+                        order.created_at.isoformat() if order.created_at else None
+                    ),
+                }
+            )
 
         return json.dumps(order_list, ensure_ascii=False, indent=2)
 
@@ -113,12 +118,12 @@ ORDER_TOOLS = [
                 "properties": {
                     "order_number": {
                         "type": "string",
-                        "description": "订单号，例如 ORD20240319001"
+                        "description": "订单号，例如 ORD20240319001",
                     }
                 },
-                "required": ["order_number"]
-            }
-        }
+                "required": ["order_number"],
+            },
+        },
     },
     {
         "type": "function",
@@ -130,12 +135,12 @@ ORDER_TOOLS = [
                 "properties": {
                     "tracking_number": {
                         "type": "string",
-                        "description": "快递单号，例如 SF1234567890"
+                        "description": "快递单号，例如 SF1234567890",
                     }
                 },
-                "required": ["tracking_number"]
-            }
-        }
+                "required": ["tracking_number"],
+            },
+        },
     },
     {
         "type": "function",
@@ -147,12 +152,12 @@ ORDER_TOOLS = [
                 "properties": {
                     "product_name": {
                         "type": "string",
-                        "description": "商品名称或关键词"
+                        "description": "商品名称或关键词",
                     }
                 },
-                "required": ["product_name"]
-            }
-        }
+                "required": ["product_name"],
+            },
+        },
     },
     {
         "type": "function",
@@ -161,16 +166,11 @@ ORDER_TOOLS = [
             "description": "查询用户的所有订单历史。当用户询问自己的订单列表时使用。",
             "parameters": {
                 "type": "object",
-                "properties": {
-                    "username": {
-                        "type": "string",
-                        "description": "用户名"
-                    }
-                },
-                "required": ["username"]
-            }
-        }
-    }
+                "properties": {"username": {"type": "string", "description": "用户名"}},
+                "required": ["username"],
+            },
+        },
+    },
 ]
 
 
@@ -179,11 +179,12 @@ TOOL_FUNCTIONS = {
     "get_order_by_number": get_order_by_number,
     "get_order_by_tracking": get_order_by_tracking,
     "search_product_orders": search_product_orders,
-    "get_user_order_history": get_user_order_history
+    "get_user_order_history": get_user_order_history,
 }
 
 
 # ============ Order Agent ============
+
 
 class OrderAgent(BaseAgent):
     """订单查询Agent，支持Tool Calling"""
@@ -208,7 +209,7 @@ class OrderAgent(BaseAgent):
         user_message: str,
         history: Optional[List[Dict[str, str]]] = None,
         user_id: Optional[int] = None,
-        username: Optional[str] = None
+        username: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         处理用户请求，自动判断是否需要调用工具
@@ -241,9 +242,7 @@ class OrderAgent(BaseAgent):
 
         # 第一轮：调用模型，让模型决定是否需要使用工具
         response = await self.chat_with_functions(
-            messages=messages,
-            functions=self.tools,
-            temperature=0.7
+            messages=messages, functions=self.tools, temperature=0.7
         )
 
         # 检查是否有函数调用（可能返回多个 tool_calls）
@@ -263,57 +262,58 @@ class OrderAgent(BaseAgent):
 
                 # 执行工具函数
                 tool_result = self._execute_tool(function_name, arguments)
-                tool_results.append({
-                    "tool_call_id": f"call_{idx}",
-                    "name": function_name,
-                    "arguments": function_call["arguments"],
-                    "content": tool_result
-                })
+                tool_results.append(
+                    {
+                        "tool_call_id": f"call_{idx}",
+                        "name": function_name,
+                        "arguments": function_call["arguments"],
+                        "content": tool_result,
+                    }
+                )
 
             # 添加 assistant 消息（包含所有 tool_calls）
-            messages.append({
-                "role": "assistant",
-                "tool_calls": [
-                    {
-                        "id": tr["tool_call_id"],
-                        "type": "function",
-                        "function": {
-                            "name": tr["name"],
-                            "arguments": tr["arguments"]
+            messages.append(
+                {
+                    "role": "assistant",
+                    "tool_calls": [
+                        {
+                            "id": tr["tool_call_id"],
+                            "type": "function",
+                            "function": {
+                                "name": tr["name"],
+                                "arguments": tr["arguments"],
+                            },
                         }
-                    }
-                    for tr in tool_results
-                ]
-            })
+                        for tr in tool_results
+                    ],
+                }
+            )
 
             # 添加所有工具结果消息
             for tr in tool_results:
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tr["tool_call_id"],
-                    "name": tr["name"],
-                    "content": tr["content"]
-                })
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tr["tool_call_id"],
+                        "name": tr["name"],
+                        "content": tr["content"],
+                    }
+                )
 
             # 第二轮：让模型根据工具结果生成最终回复
             final_response = await self.chat_with_functions(
-                messages=messages,
-                functions=self.tools,
-                temperature=0.7
+                messages=messages, functions=self.tools, temperature=0.7
             )
 
             return {
                 "content": final_response.get("content", "处理完成"),
                 "tool_used": True,
                 "tool_name": [tr["name"] for tr in tool_results],
-                "tool_result": [tr["content"] for tr in tool_results]
+                "tool_result": [tr["content"] for tr in tool_results],
             }
         else:
             # 无需调用工具，直接返回回复
-            return {
-                "content": response.get("content", ""),
-                "tool_used": False
-            }
+            return {"content": response.get("content", ""), "tool_used": False}
 
     def _execute_tool(self, function_name: str, arguments: Dict[str, Any]) -> str:
         """执行工具函数"""
