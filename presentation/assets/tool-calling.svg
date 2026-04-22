@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 340" font-family="PingFang SC, Microsoft YaHei, sans-serif">
+  <defs>
+    <marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F3A68"/>
+    </marker>
+    <style>
+      .node { fill:#FFFFFF; stroke:#2E86C1; stroke-width:1.6; rx:10; ry:10; }
+      .nodeaccent { fill:#E8F1FB; stroke:#1F3A68; stroke-width:1.8; rx:10; ry:10; }
+      .db { fill:#FFF8F0; stroke:#E67E22; stroke-width:1.6; rx:10; ry:10; }
+      .txt { fill:#1F3A68; font-size:15px; font-weight:700; text-anchor:middle; }
+      .sub { fill:#566573; font-size:12px; text-anchor:middle; }
+      .flow { stroke:#1F3A68; stroke-width:1.6; fill:none; }
+      .step { fill:#2E86C1; font-size:12px; font-weight:700; }
+    </style>
+  </defs>
+
+  <text x="480" y="28" text-anchor="middle" fill="#1F3A68" font-size="18" font-weight="700">Tool Calling 订单查询流程</text>
+
+  <!-- User -->
+  <rect class="node" x="40" y="140" width="140" height="60"/>
+  <text class="txt" x="110" y="168">用户问题</text>
+  <text class="sub" x="110" y="187">"ORD123 到哪了？"</text>
+
+  <!-- LLM -->
+  <rect class="nodeaccent" x="230" y="140" width="160" height="60"/>
+  <text class="txt" x="310" y="168">DeepSeek LLM</text>
+  <text class="sub" x="310" y="187">识别需调用工具</text>
+
+  <!-- Tool Call Decision -->
+  <rect class="node" x="440" y="70" width="170" height="60"/>
+  <text class="txt" x="525" y="98">tool_calls 解析</text>
+  <text class="sub" x="525" y="117">get_order_status(ORD123)</text>
+
+  <!-- Order Service -->
+  <rect class="db" x="670" y="70" width="160" height="60"/>
+  <text class="txt" x="750" y="98">Order Service</text>
+  <text class="sub" x="750" y="117">SQLite 查询</text>
+
+  <!-- Tool Result -->
+  <rect class="node" x="440" y="210" width="170" height="60"/>
+  <text class="txt" x="525" y="238">结果回喂 LLM</text>
+  <text class="sub" x="525" y="257">已发货 / 顺丰 SF456</text>
+
+  <!-- Final Answer -->
+  <rect class="nodeaccent" x="670" y="210" width="160" height="60"/>
+  <text class="txt" x="750" y="238">自然语言回复</text>
+  <text class="sub" x="750" y="257">"已发货，预计明天到"</text>
+
+  <!-- Flow -->
+  <path class="flow" d="M180 170 H 230" marker-end="url(#arr3)"/>
+  <path class="flow" d="M390 160 L 440 100" marker-end="url(#arr3)"/>
+  <path class="flow" d="M610 100 H 670" marker-end="url(#arr3)"/>
+  <path class="flow" d="M750 130 V 210" marker-end="url(#arr3)"/>
+  <path class="flow" d="M670 240 H 610" marker-end="url(#arr3)"/>
+  <path class="flow" d="M440 240 L 390 185" marker-end="url(#arr3)"/>
+
+  <!-- Labels -->
+  <text class="step" x="395" y="145">①</text>
+  <text class="step" x="620" y="90">②</text>
+  <text class="step" x="755" y="155">③</text>
+  <text class="step" x="625" y="232">④</text>
+  <text class="step" x="395" y="220">⑤</text>
+</svg>

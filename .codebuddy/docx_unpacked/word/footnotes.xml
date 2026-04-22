@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<w:footnotes xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:footnote w:type="normal" w:id="0">
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="00000d"/>
+        <w:rPr/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="00000f"/>
+        </w:rPr>
+        <w:footnoteRef/>
+      </w:r>
+      <w:r>
+        <w:rPr/>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:hint="eastAsia"/>
+        </w:rPr>
+        <w:t>全组工作量分配为+x，或-x。要求和为0，如果分组同学工作量相差过大，需有书面详细说明。</w:t>
+      </w:r>
+    </w:p>
+  </w:footnote>
+  <w:footnote w:type="continuationSeparator" w:id="2">
+    <w:p>
+      <w:pPr>
+        <w:rPr/>
+      </w:pPr>
+      <w:r>
+        <w:rPr/>
+        <w:continuationSeparator/>
+      </w:r>
+    </w:p>
+  </w:footnote>
+  <w:footnote w:type="separator" w:id="1">
+    <w:p>
+      <w:pPr>
+        <w:rPr/>
+      </w:pPr>
+      <w:r>
+        <w:rPr/>
+        <w:separator/>
+      </w:r>
+    </w:p>
+  </w:footnote>
+</w:footnotes>

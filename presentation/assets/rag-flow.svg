@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" font-family="PingFang SC, Microsoft YaHei, sans-serif">
+  <defs>
+    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F3A68"/>
+    </marker>
+    <style>
+      .node { fill:#FFFFFF; stroke:#2E86C1; stroke-width:1.6; rx:10; ry:10; }
+      .nodeaccent { fill:#E8F1FB; stroke:#1F3A68; stroke-width:1.8; rx:10; ry:10; }
+      .txt { fill:#1F3A68; font-size:15px; font-weight:700; text-anchor:middle; }
+      .sub { fill:#566573; font-size:12px; text-anchor:middle; }
+      .flow { stroke:#1F3A68; stroke-width:1.8; fill:none; }
+      .step { fill:#2E86C1; font-size:12px; font-weight:700; text-anchor:middle; }
+    </style>
+  </defs>
+
+  <text x="480" y="28" text-anchor="middle" fill="#1F3A68" font-size="18" font-weight="700">RAG 产品推荐流程</text>
+
+  <!-- Nodes -->
+  <rect class="node" x="30" y="110" width="140" height="70"/>
+  <text class="txt" x="100" y="140">用户 Query</text>
+  <text class="sub" x="100" y="160">"推荐 200 元键盘"</text>
+
+  <rect class="node" x="200" y="110" width="140" height="70"/>
+  <text class="txt" x="270" y="140">Embedding</text>
+  <text class="sub" x="270" y="160">SiliconFlow API</text>
+
+  <rect class="nodeaccent" x="370" y="110" width="170" height="70"/>
+  <text class="txt" x="455" y="140">ChromaDB 检索</text>
+  <text class="sub" x="455" y="160">相似度 Top-K（K=5）</text>
+
+  <rect class="node" x="570" y="110" width="170" height="70"/>
+  <text class="txt" x="655" y="140">Prompt 拼装</text>
+  <text class="sub" x="655" y="160">上下文 + 产品卡片</text>
+
+  <rect class="node" x="770" y="110" width="160" height="70"/>
+  <text class="txt" x="850" y="140">DeepSeek LLM</text>
+  <text class="sub" x="850" y="160">生成推荐文案</text>
+
+  <!-- Flow arrows -->
+  <path class="flow" d="M170 145 H 200" marker-end="url(#arr2)"/>
+  <path class="flow" d="M340 145 H 370" marker-end="url(#arr2)"/>
+  <path class="flow" d="M540 145 H 570" marker-end="url(#arr2)"/>
+  <path class="flow" d="M740 145 H 770" marker-end="url(#arr2)"/>
+
+  <!-- Steps -->
+  <text class="step" x="185" y="105">①</text>
+  <text class="step" x="355" y="105">②</text>
+  <text class="step" x="555" y="105">③</text>
+  <text class="step" x="755" y="105">④</text>
+
+  <!-- Data source -->
+  <rect x="350" y="220" width="210" height="50" fill="#F8FAFC" stroke="#566573" stroke-dasharray="4 3" rx="8"/>
+  <text class="sub" x="455" y="242" font-size="13" font-weight="600" fill="#1F3A68">产品向量库（30 款商品）</text>
+  <text class="sub" x="455" y="260">data/products.csv → embedding → Chroma</text>
+  <path class="flow" d="M455 220 V 180" stroke-dasharray="3 3" marker-end="url(#arr2)"/>
+</svg>

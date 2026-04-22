@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Shop Agent · 电商管理客服系统 课程汇报</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/theme/white.css" id="theme">
+
+<style>
+  :root{
+    --c-primary:#1F3A68;
+    --c-accent:#2E86C1;
+    --c-text:#2C3E50;
+    --c-muted:#566573;
+    --c-bg:#FFFFFF;
+    --c-bg-soft:#F8FAFC;
+    --c-line:#E5E8E8;
+    --c-ok:#27AE60;
+    --c-warn:#E67E22;
+  }
+
+  .reveal{
+    font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    color:var(--c-text);
+    background:var(--c-bg);
+  }
+  .reveal .slides{ text-align:left; }
+  .reveal .slides section{ padding:16px 56px; }
+
+  .reveal h1,.reveal h2,.reveal h3,.reveal h4{
+    font-family:inherit;
+    color:var(--c-primary);
+    text-transform:none;
+    letter-spacing:0;
+    font-weight:700;
+    margin-top:0;
+  }
+  .reveal h1{ font-size:46px; }
+  .reveal h2{ font-size:34px; }
+  .reveal h3{ font-size:24px; }
+  .reveal p,.reveal li{ font-size:20px; line-height:1.65; color:var(--c-text); }
+  .reveal strong{ color:var(--c-primary); }
+  .reveal em{ font-style:normal; color:var(--c-accent); font-weight:600; }
+
+  /* 顶部章节横条 */
+  .chapter-bar{
+    display:flex;align-items:center;gap:12px;
+    padding:6px 10px;
+    border-left:4px solid var(--c-accent);
+    background:var(--c-bg-soft);
+    color:var(--c-primary);
+    font-size:14px;font-weight:600;
+    margin:-6px 0 14px 0;
+    border-radius:0 6px 6px 0;
+  }
+  .chapter-bar .num{ color:var(--c-accent); font-weight:800; }
+
+  /* 标题行 */
+  .slide-title{
+    display:flex;align-items:baseline;gap:14px;
+    margin:0 0 10px 0;
+    padding-bottom:10px;
+    border-bottom:2px solid var(--c-line);
+  }
+  .slide-title h2{ margin:0; }
+  .slide-title .sub{
+    color:var(--c-muted);
+    font-size:16px;
+  }
+
+  /* 页脚 */
+  .footer{
+    position:fixed;
+    bottom:14px;left:0;right:0;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:0 36px;
+    color:var(--c-muted);
+    font-size:13px;
+    pointer-events:none;
+    z-index:10;
+  }
+  .footer .brand{ color:var(--c-primary); font-weight:600; }
+
+  /* 工具卡片 */
+  .grid{
+    display:grid;
+    gap:16px;
+  }
+  .grid.cols-2{ grid-template-columns:repeat(2,1fr); }
+  .grid.cols-3{ grid-template-columns:repeat(3,1fr); }
+  .grid.cols-4{ grid-template-columns:repeat(4,1fr); }
+
+  .card{
+    background:var(--c-bg);
+    border:1px solid var(--c-line);
+    border-left:4px solid var(--c-accent);
+    border-radius:10px;
+    padding:14px 18px;
+  }
+  .card h4{
+    color:var(--c-primary);
+    font-size:18px;
+    margin:0 0 6px 0;
+  }
+  .card p,.card li{ font-size:15px; color:var(--c-text); line-height:1.6; }
+  .card .tag{
+    display:inline-block;
+    background:var(--c-bg-soft);
+    color:var(--c-accent);
+    font-size:12px;
+    padding:2px 8px;
+    border-radius:10px;
+    margin-right:6px;
+  }
+
+  .kv{
+    display:flex;gap:12px;flex-wrap:wrap;
+  }
+  .kv .k{
+    background:var(--c-primary);color:#fff;
+    padding:4px 10px;border-radius:4px;
+    font-size:13px;font-weight:600;
+  }
+  .kv .v{
+    background:var(--c-bg-soft);color:var(--c-text);
+    padding:4px 10px;border-radius:4px;font-size:13px;
+  }
+
+  /* 封面 */
+  .cover{
+    height:100%;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    text-align:center;
+    background:linear-gradient(180deg,#FFFFFF 0%, #F4F8FD 100%);
+  }
+  .cover .badge{
+    width:72px;height:72px;border-radius:50%;
+    background:var(--c-primary);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:28px;font-weight:800;
+    margin-bottom:22px;
+    box-shadow:0 6px 20px rgba(31,58,104,.18);
+    letter-spacing:1px;
+  }
+  .cover h1{ font-size:52px; margin-bottom:10px; }
+  .cover .sub{ color:var(--c-muted); font-size:22px; margin-bottom:28px; }
+  .cover .meta{
+    margin-top:40px;color:var(--c-muted);font-size:16px;
+    border-top:1px solid var(--c-line);padding-top:16px;
+    width:60%;
+    display:flex;justify-content:space-between;
+  }
+  .cover .meta b{ color:var(--c-primary); font-weight:600; }
+
+  /* 目录 */
+  .toc{
+    display:grid;grid-template-columns:repeat(2,1fr);
+    gap:18px;margin-top:12px;
+  }
+  .toc-item{
+    display:flex;align-items:flex-start;gap:14px;
+    padding:18px 20px;
+    border:1px solid var(--c-line);border-radius:12px;
+    background:var(--c-bg);
+    transition:all .25s;
+  }
+  .toc-item:hover{
+    border-color:var(--c-accent);
+    transform:translateY(-2px);
+    box-shadow:0 4px 16px rgba(46,134,193,.12);
+  }
+  .toc-item .no{
+    font-size:28px;font-weight:800;color:var(--c-accent);
+    min-width:56px;
+  }
+  .toc-item .t{ font-size:20px;font-weight:700;color:var(--c-primary);margin-bottom:4px; }
+  .toc-item .d{ font-size:14px;color:var(--c-muted); }
+
+  /* Tech stack 图标墙 */
+  .stack{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+  }
+  .stack-item{
+    border:1px solid var(--c-line);
+    border-radius:10px;
+    padding:14px 12px;
+    text-align:center;
+    background:var(--c-bg);
+  }
+  .stack-item .n{ font-size:17px;font-weight:700;color:var(--c-primary);margin-bottom:4px; }
+  .stack-item .r{ font-size:13px;color:var(--c-muted); }
+
+  /* Memory 收益表 */
+  table.bench{
+    width:100%;border-collapse:collapse;margin-top:8px;font-size:15px;
+  }
+  table.bench th,table.bench td{
+    padding:8px 12px;
+    border-bottom:1px solid var(--c-line);
+    text-align:left;
+  }
+  table.bench th{ background:var(--c-bg-soft);color:var(--c-primary); }
+  table.bench td.good{ color:var(--c-ok); font-weight:700; }
+
+  /* 代码小片段 */
+  pre.mini{
+    background:var(--c-bg-soft);
+    border:1px solid var(--c-line);
+    border-left:3px solid var(--c-accent);
+    border-radius:6px;
+    padding:12px 14px;
+    font-size:14px;
+    color:var(--c-text);
+    line-height:1.55;
+    overflow:auto;
+    font-family:"Consolas","Source Code Pro",monospace;
+  }
+  pre.mini .kw{ color:var(--c-accent); }
+  pre.mini .cm{ color:#95A5A6; }
+
+  /* 浏览器 mock */
+  .browser{
+    border:1px solid var(--c-line);
+    border-radius:10px;
+    background:var(--c-bg);
+    box-shadow:0 4px 14px rgba(31,58,104,.08);
+    overflow:hidden;
+  }
+  .browser .bar{
+    background:var(--c-bg-soft);
+    border-bottom:1px solid var(--c-line);
+    padding:8px 12px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .browser .dot{
+    width:10px;height:10px;border-radius:50%;background:#DDE2E6;
+  }
+  .browser .url{
+    margin-left:12px;color:var(--c-muted);font-size:12px;
+  }
+  .browser .body{ display:flex;min-height:280px; }
+  .browser .sidebar{
+    width:180px;border-right:1px solid var(--c-line);
+    padding:14px 12px;background:var(--c-bg-soft);font-size:13px;
+    color:var(--c-text);
+  }
+  .browser .sidebar h5{ color:var(--c-primary);margin:0 0 6px 0;font-size:14px; }
+  .browser .chat{
+    flex:1;padding:14px 18px;display:flex;flex-direction:column;gap:10px;
+  }
+  .bubble{
+    max-width:85%;padding:10px 14px;border-radius:12px;font-size:14px;line-height:1.55;
+  }
+  .bubble.user{
+    align-self:flex-end;background:var(--c-primary);color:#fff;
+    border-bottom-right-radius:4px;
+  }
+  .bubble.bot{
+    align-self:flex-start;background:var(--c-bg-soft);color:var(--c-text);
+    border:1px solid var(--c-line);border-bottom-left-radius:4px;
+  }
+  .bubble .intent{
+    display:block;margin-top:6px;color:var(--c-accent);font-size:12px;
+  }
+
+  /* 总结双栏 */
+  .split{
+    display:grid;grid-template-columns:1fr 1fr;gap:18px;
+  }
+  .split h4{ font-size:18px;margin:0 0 10px 0; }
+  .split .done h4{ color:var(--c-ok); }
+  .split .todo h4{ color:var(--c-warn); }
+  .split ul{ margin:0;padding-left:22px; }
+  .split li{ font-size:16px;line-height:1.7; }
+
+  /* Q&A */
+  .qa{
+    height:100%;display:flex;flex-direction:column;
+    justify-content:center;align-items:center;text-align:center;
+  }
+  .qa .big{
+    font-size:96px;font-weight:800;
+    color:var(--c-primary);
+    letter-spacing:8px;
+    margin-bottom:10px;
+  }
+  .qa .big span{ color:var(--c-accent); }
+  .qa .t{ font-size:24px;color:var(--c-muted); margin-bottom:30px; }
+  .qa .thanks{ font-size:40px;font-weight:700;color:var(--c-primary);letter-spacing:4px; }
+
+  /* 图片居中 */
+  .fig{
+    display:flex;justify-content:center;align-items:center;
+    margin-top:6px;
+  }
+  .fig img{
+    max-width:100%;max-height:420px;
+    border:1px solid var(--c-line);border-radius:8px;
+    background:#fff;padding:6px;
+  }
+
+  /* fragment */
+  .reveal .fragment.fade-in-slow{ opacity:0; transition:all .5s ease; }
+  .reveal .fragment.fade-in-slow.visible{ opacity:1; }
+
+  /* 小标签条 */
+  .tags{ display:flex;gap:8px;flex-wrap:wrap;margin-top:6px; }
+  .tags .t{
+    background:var(--c-bg-soft);
+    border:1px solid var(--c-line);
+    color:var(--c-primary);
+    font-size:12px;
+    padding:2px 10px;border-radius:12px;
+  }
+
+  /* 进度条色 */
+  .reveal .progress{ color:var(--c-accent); }
+  .reveal .controls{ color:var(--c-accent); }
+</style>
+</head>
+<body>
+
+<div class="reveal">
+  <div class="slides">
+
+    <!-- 01 封面 -->
+    <section data-background-color="#FFFFFF">
+      <div class="cover">
+        <div class="badge">SA</div>
+        <h1>Shop Agent</h1>
+        <div class="sub">电商管理客服系统</div>
+        <p style="font-size:18px;color:var(--c-muted);margin-top:-6px;">基于 RAG + Agent + Tool Calling 的课程大作业</p>
+        <div class="meta">
+          <div>课程：<b>人工智能应用</b></div>
+          <div>作者：<b>姓名 / 学号</b></div>
+          <div>日期：<b>2026 年春</b></div>
+        </div>
+      </div>
+      <aside class="notes">
+        大家好，这次课程汇报我将介绍我的大作业——Shop Agent 电商管理客服系统。
+        它是一个基于 RAG、Agent 和 Tool Calling 的极简版智能客服，
+        整个项目已完成后端 FastAPI 服务、Streamlit 前端，以及三阶段的 Agent Memory 压缩机制。
+        汇报约 10 分钟，分为背景、技术、演示、总结四部分。
+      </aside>
+    </section>
+
+    <!-- 02 目录 -->
+    <section>
+      <div class="slide-title">
+        <h2>汇报目录</h2>
+        <span class="sub">Table of Contents</span>
+      </div>
+      <div class="toc">
+        <div class="toc-item"><div class="no">01</div><div><div class="t">项目背景与定位</div><div class="d">🛒 痛点分析 · 目标设定</div></div></div>
+        <div class="toc-item"><div class="no">02</div><div><div class="t">核心技术实现</div><div class="d">⚙️ 架构 · RAG · Tool Calling · Memory</div></div></div>
+        <div class="toc-item"><div class="no">03</div><div><div class="t">功能演示</div><div class="d">💬 登录 · 对话 · 意图 · 多轮</div></div></div>
+        <div class="toc-item"><div class="no">04</div><div><div class="t">总结与展望</div><div class="d">📊 成果 · 后续工作 · Q&A</div></div></div>
+      </div>
+      <aside class="notes">
+        汇报分为四个部分：背景与定位说明为什么要做；技术实现介绍系统的四个核心模块；
+        功能演示展示用户真实使用流程；最后是总结与后续工作。
+      </aside>
+    </section>
+
+    <!-- 03 背景与痛点 -->
+    <section>
+      <div class="chapter-bar"><span class="num">01</span> / 项目背景与定位</div>
+      <div class="slide-title"><h2>项目背景与痛点</h2><span class="sub">Why Shop Agent</span></div>
+      <div class="grid cols-2">
+        <div class="card">
+          <h4>电商客服现状</h4>
+          <ul>
+            <li>SKU 规模增长，人工客服<em>成本高、响应慢</em></li>
+            <li>24×7 在线服务难以全人工覆盖</li>
+            <li>标准化问题（订单查询、商品推荐）占比高</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>LLM 直接应用的挑战</h4>
+          <ul>
+            <li>没有<em>工具调用</em>，无法访问订单数据库</li>
+            <li>缺少<em>检索增强</em>，无法给出真实商品推荐</li>
+            <li>上下文暴涨，Token 与延迟<em>线性恶化</em></li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px;border-left-color:var(--c-primary);">
+        <h4>→ 解决方案</h4>
+        <p>在大模型之上叠加三层能力：<strong>Tool Calling</strong> 接数据库、<strong>RAG</strong> 接知识库、<strong>Agent Memory</strong> 压长上下文。</p>
+      </div>
+      <aside class="notes">
+        电商客服有三个典型痛点：成本高、7×24 覆盖难、标准化问题多。
+        纯 LLM 无法访问真实订单数据，也无法给出准确商品推荐，
+        而且对话一长 Token 就爆了。所以我们用 Tool Calling + RAG + Memory 三件套来解决。
+      </aside>
+    </section>
+
+    <!-- 04 项目定位与目标 -->
+    <section>
+      <div class="chapter-bar"><span class="num">01</span> / 项目背景与定位</div>
+      <div class="slide-title"><h2>项目定位与目标</h2><span class="sub">Goal & Scope</span></div>
+      <div class="grid cols-2">
+        <div class="card">
+          <h4>项目定位</h4>
+          <p>面向中小型电商的 <strong>极简可落地</strong> 智能客服雏形，覆盖从 API 到前端的完整链路。</p>
+          <div class="tags">
+            <span class="t">大模型对话</span>
+            <span class="t">工具调用</span>
+            <span class="t">检索增强</span>
+            <span class="t">Agent 记忆</span>
+          </div>
+        </div>
+        <div class="card">
+          <h4>具体目标</h4>
+          <ul>
+            <li>✅ 基础对话 API（<code>/api/chat</code>）</li>
+            <li>✅ 工具调用：订单 & 物流查询</li>
+            <li>✅ RAG：基于产品向量库的推荐</li>
+            <li>✅ 意图路由：自动选择合适的 Agent</li>
+            <li>✅ Agent Memory：对话历史压缩</li>
+            <li>✅ 双前端（微信小程序 + Streamlit） + JWT 认证</li>
+          </ul>
+        </div>
+      </div>
+      <aside class="notes">
+        定位是一个小而全的可落地原型，重点不在规模，而在串通 RAG + Agent + Memory 的完整链路。
+        右边是 6 个主要目标，全部已经实现，后面会逐项展开。
+      </aside>
+    </section>
+
+    <!-- 05 技术栈总览 -->
+    <section>
+      <div class="chapter-bar"><span class="num">02</span> / 核心技术实现</div>
+      <div class="slide-title"><h2>技术栈总览</h2><span class="sub">Tech Stack</span></div>
+      <div class="stack">
+        <div class="stack-item"><div class="n">FastAPI</div><div class="r">异步 Web 框架</div></div>
+        <div class="stack-item"><div class="n">DeepSeek API</div><div class="r">大模型（OpenAI 兼容）</div></div>
+        <div class="stack-item"><div class="n">SiliconFlow</div><div class="r">Embedding 服务</div></div>
+        <div class="stack-item"><div class="n">ChromaDB</div><div class="r">向量数据库</div></div>
+        <div class="stack-item"><div class="n">SQLAlchemy</div><div class="r">ORM / SQLite</div></div>
+        <div class="stack-item"><div class="n">Pydantic v2</div><div class="r">数据校验 & 配置</div></div>
+        <div class="stack-item"><div class="n">Streamlit</div><div class="r">前端聊天界面</div></div>
+        <div class="stack-item"><div class="n">Uvicorn</div><div class="r">ASGI 服务器</div></div>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <h4>工程化支撑</h4>
+        <p>
+          <span class="tag">启动配置校验</span>
+          <span class="tag">请求日志中间件</span>
+          <span class="tag">速率限制中间件</span>
+          <span class="tag">全局异常处理</span>
+          <span class="tag">psutil 监控端点</span>
+        </p>
+      </div>
+      <aside class="notes">
+        技术栈全部是 Python 生态：FastAPI 做后端，DeepSeek 做大模型，SiliconFlow 做向量化，
+        ChromaDB 做向量检索，SQLite 做订单库，Streamlit 做前端。
+        下面一排是工程化组件：启动校验、日志、限流、异常、监控。
+      </aside>
+    </section>
+
+    <!-- 06 整体架构 -->
+    <section>
+      <div class="chapter-bar"><span class="num">02</span> / 核心技术实现</div>
+      <div class="slide-title"><h2>系统整体架构</h2><span class="sub">Layered Architecture · 四层解耦</span></div>
+      <div class="grid cols-2" style="grid-template-columns:1fr 1.05fr;align-items:center;gap:20px;">
+        <div class="fig" style="margin-top:0;">
+          <img src="assets/diagram-architecture.png" alt="系统整体架构图" style="max-height:520px;"/>
+        </div>
+        <div>
+          <div class="card"><h4>① 展示层 Presentation</h4><p>微信小程序（正式演示）+ Streamlit（开发联调）。</p></div>
+          <div class="card" style="margin-top:10px;"><h4>② 接口与网关层 API Gateway</h4><p>FastAPI REST + 鉴权 / 限流 / 日志中间件，统一入口。</p></div>
+          <div class="card" style="margin-top:10px;"><h4>③ 智能业务层 AI & Agent</h4><p>RouterAgent 统一路由 → OrderAgent · RAGAgent · General LLM，旁挂 AgentMemory 记忆压缩。</p></div>
+          <div class="card" style="margin-top:10px;"><h4>④ 数据与持久层 Data</h4><p>SQLite 存关系型业务数据，ChromaDB 存商品向量库。</p></div>
+        </div>
+      </div>
+      <aside class="notes">
+        系统采用"分层后端 + 多 Agent 协同 + 双前端验证"的方案，共四层：
+        展示层有微信小程序和 Streamlit 两套前端；API 网关层统一通过 FastAPI 并加鉴权、限流、日志中间件；
+        智能层由 RouterAgent 分发到 Order、RAG、General 三类 Agent，旁挂 AgentMemory 做记忆压缩；
+        数据层是 SQLite 关系库加 ChromaDB 向量库。这张图在我们的报告中是"图 3·系统架构图"。
+      </aside>
+    </section>
+
+    <!-- 07 Tool Calling -->
+    <section>
+      <div class="chapter-bar"><span class="num">02</span> / 核心技术实现</div>
+      <div class="slide-title"><h2>核心技术（一）Tool Calling</h2><span class="sub">订单查询 Agent · UML 时序</span></div>
+      <div class="grid cols-2" style="grid-template-columns:1.15fr 1fr;gap:18px;">
+        <div class="fig" style="margin-top:0;">
+          <img src="assets/diagram-tool-calling.png" alt="Tool Calling 时序图" style="max-height:460px;"/>
+        </div>
+        <div>
+          <div class="card">
+            <h4>7 步调用流程</h4>
+            <ol style="padding-left:22px;margin:4px 0;">
+              <li>用户发起自然语言请求</li>
+              <li>OrderAgent 判意图、匹配 Tools</li>
+              <li>触发 Tool Calling，参数校验</li>
+              <li>OrderService 执行 SQL 查询</li>
+              <li>SQLite 返回业务数据</li>
+              <li>结果序列化为 ToolMessage 回喂</li>
+              <li>LLM 结合上下文生成最终答复</li>
+            </ol>
+          </div>
+          <div class="card" style="margin-top:10px;">
+            <h4>工具定义（OpenAI 兼容）</h4>
+<pre class="mini">tools = [{
+  <span class="kw">"type"</span>: <span class="kw">"function"</span>,
+  <span class="kw">"function"</span>: {
+    <span class="kw">"name"</span>: <span class="kw">"get_order_status"</span>,
+    <span class="kw">"description"</span>: <span class="kw">"查询订单物流状态"</span>,
+    <span class="kw">"parameters"</span>: { ... order_number ... }
+  }
+}]</pre>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        Tool Calling 用的是 OpenAI 函数调用协议。左侧是系统的 UML 时序图，完整展示了
+        用户 → OrderAgent（LLM） → OrderService（工具调度层） → SQLite 的 7 步交互：
+        模型先做语义理解和意图判断，触发 tool_calls 后由后端执行真实 SQL 查询，
+        再把结果以 ToolMessage 角色回喂给模型，最终生成自然语言回复。
+      </aside>
+    </section>
+
+    <!-- 08 RAG -->
+    <section>
+      <div class="chapter-bar"><span class="num">02</span> / 核心技术实现</div>
+      <div class="slide-title"><h2>核心技术（二）RAG 产品推荐</h2><span class="sub">检索增强生成 · 两阶段流程</span></div>
+      <div class="grid cols-2" style="grid-template-columns:0.9fr 1.1fr;gap:20px;align-items:center;">
+        <div class="fig" style="margin-top:0;">
+          <img src="assets/diagram-rag-flow.png" alt="RAG 两阶段流程图" style="max-height:500px;"/>
+        </div>
+        <div>
+          <div class="card">
+            <h4>一、向量检索阶段</h4>
+            <p>用户 Query → Embedding 模型 → Query 向量 → ChromaDB 计算相似度 → 召回 Top-K=5 候选商品。</p>
+          </div>
+          <div class="card" style="margin-top:10px;">
+            <h4>二、增强生成阶段</h4>
+            <p>Top-K 结果作为外部知识注入 Prompt，与用户原始意图拼接后交由 DeepSeek LLM，生成个性化推荐话术。</p>
+          </div>
+          <div class="card" style="margin-top:10px;border-left-color:var(--c-primary);">
+            <h4>数据与依赖</h4>
+            <p><code>data/products.csv</code> 30 款商品离线入库；Embedding 由 SiliconFlow 提供（OpenAI 兼容接口）。</p>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        RAG 在我们系统中分两个阶段：左图上半部分是向量检索，把用户 query 转成向量后
+        在 ChromaDB 里做相似度检索，召回 Top-K 商品；下半部分是增强生成，
+        把召回结果和原始意图一起拼进 Prompt 交给大模型生成推荐话术。
+        相比关键词匹配，向量检索能处理语义近义表达，鲁棒性更高。
+      </aside>
+    </section>
+
+    <!-- 09 Router Agent -->
+    <section>
+      <div class="chapter-bar"><span class="num">02</span> / 核心技术实现</div>
+      <div class="slide-title"><h2>核心技术（三）Router Agent</h2><span class="sub">意图路由</span></div>
+      <div class="grid cols-2" style="grid-template-columns:1fr 1.2fr;">
+        <div class="card">
+          <h4>三分类意图识别</h4>
+          <div class="kv" style="flex-direction:column;gap:10px;">
+            <div><span class="k">order_query</span>
+              <span class="v">订单 / 物流 / 快递相关</span></div>
+            <div><span class="k">product_rec</span>
+              <span class="v">商品推荐 / 选购咨询</span></div>
+            <div><span class="k">general</span>
+              <span class="v">寒暄 / 政策 / 其它</span></div>
+          </div>
+          <p style="margin-top:12px;color:var(--c-muted);font-size:14px;">
+            由 <code>router_agent.py</code> 统一调度，决定走 Order / RAG / 通用对话。
+          </p>
+        </div>
+        <div>
+          <div class="card">
+            <h4>调用时序</h4>
+            <ol>
+              <li>用户消息 + 历史 → Router Agent</li>
+              <li>LLM 输出意图标签</li>
+              <li>分发到对应子 Agent 执行</li>
+              <li>统一回包（含 <code>intent</code> 字段）</li>
+            </ol>
+          </div>
+          <div class="card" style="margin-top:10px;border-left-color:var(--c-warn);">
+            <h4>已识别优化点</h4>
+            <p style="font-size:15px;">额外的意图分类 LLM 调用会增加延迟与成本，已在 <code>to-fix.md</code> 标记，后续可用规则预过滤 + 单次 tool_choice 合并。</p>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        Router Agent 做的是三分类：订单查询、产品推荐、通用对话。
+        它用 LLM 识别意图后分发给对应子 Agent，前端也会显示识别出的意图标签。
+        已识别到的优化点是分类多了一次 LLM 调用，后续可以合并或用规则预过滤。
+      </aside>
+    </section>
+
+    <!-- 10 Agent Memory -->
+    <section>
+      <div class="chapter-bar"><span class="num">02</span> / 核心技术实现</div>
+      <div class="slide-title"><h2>核心技术（四）Agent Memory 三阶段</h2><span class="sub">上下文压缩</span></div>
+      <div class="fig"><img src="assets/memory-stages.svg" alt="Agent Memory 三阶段" onerror="this.style.display='none'"/></div>
+      <table class="bench">
+        <thead><tr><th>指标</th><th>改进前</th><th>改进后</th><th>提升</th></tr></thead>
+        <tbody>
+          <tr><td>10 轮对话 Token</td><td>~2000</td><td>~600</td><td class="good">↓ 70%</td></tr>
+          <tr><td>30 轮对话 Token</td><td>~6000</td><td>~1200</td><td class="good">↓ 80%</td></tr>
+          <tr><td>平均响应时间</td><td>2.5s</td><td>1.5s</td><td class="good">↓ 40%</td></tr>
+          <tr><td>API 成本 / 100 对话</td><td>$0.50</td><td>$0.12</td><td class="good">↓ 76%</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13px;color:var(--c-muted);margin-top:6px;">
+        * 数据来源：<code>AGENT_MEMORY_PLAN.md</code> 预期收益表（设计目标，非实测）。阶段 1/2/3 已完成，阶段 4 持久化待完善。
+      </p>
+      <aside class="notes">
+        Memory 是本项目的亮点之一，分三阶段：
+        阶段 1 用规则 Buffer 策略保留最近 3 轮、压缩 4-8 轮；
+        阶段 2 加入场景识别，结构化保存订单号、商品偏好等关键字段；
+        阶段 3 用 LLM 对早期历史生成 50 字摘要。
+        需要强调：下表数字是设计目标，来源 AGENT_MEMORY_PLAN.md，不是实测值。
+      </aside>
+    </section>
+
+    <!-- 11 数据模型 ER -->
+    <section>
+      <div class="chapter-bar"><span class="num">02</span> / 核心技术实现</div>
+      <div class="slide-title"><h2>数据模型设计</h2><span class="sub">ER Diagram · 四张核心表</span></div>
+      <div class="grid cols-2" style="grid-template-columns:1fr 1fr;gap:20px;align-items:center;">
+        <div class="fig" style="margin-top:0;">
+          <img src="assets/diagram-er.png" alt="数据库 ER 图" style="max-height:520px;"/>
+        </div>
+        <div>
+          <div class="card"><h4>users · 用户</h4><p>用户名 / 邮箱唯一索引，存储 <code>hashed_password</code>；一对多关联 orders。</p></div>
+          <div class="card" style="margin-top:10px;"><h4>orders · 订单</h4><p>订单号、物流单号、收货地址、状态、金额、创建 / 发货 / 送达时间戳。</p></div>
+          <div class="card" style="margin-top:10px;"><h4>products · 商品</h4><p>名称 / 描述 / 类别 / 价格 / 库存，支撑 RAG 向量库同步。</p></div>
+          <div class="card" style="margin-top:10px;"><h4>order_items · 订单明细</h4><p>订单 × 商品多对多桥表，保留下单时的单价与小计，保证历史一致性。</p></div>
+        </div>
+      </div>
+      <aside class="notes">
+        数据层一共四张表：users、orders、products 以及桥表 order_items。
+        users 到 orders 是一对多（一个用户可以有多个订单），
+        orders 与 products 通过 order_items 多对多关联。
+        关键字段加了索引以支撑订单号、快递号、商品维度的高效检索。
+        这张图在报告中是"图 5·ER 图"。
+      </aside>
+    </section>
+
+    <!-- 12 系统亮点小结 -->
+    <section>
+      <div class="chapter-bar"><span class="num">02</span> / 核心技术实现</div>
+      <div class="slide-title"><h2>系统亮点小结</h2><span class="sub">Highlights</span></div>
+      <div class="grid cols-2">
+        <div class="card">
+          <h4>① 分层清晰的架构</h4>
+          <p>API / Agent / Service / Database 四层解耦，模块可独立测试与替换。</p>
+        </div>
+        <div class="card">
+          <h4>② 能力正交的 Agent</h4>
+          <p>Router / Order / RAG 各司其职，扩展新场景只需新增 Agent，不动路由逻辑。</p>
+        </div>
+        <div class="card">
+          <h4>③ 三阶段记忆压缩</h4>
+          <p>Buffer → 场景感知 → LLM 压缩，从规则到智能，预期 Token 大幅下降。</p>
+        </div>
+        <div class="card">
+          <h4>④ 工程化完善</h4>
+          <p>启动配置校验、请求日志、速率限制、JWT 认证、psutil 监控端点，贴近生产。</p>
+        </div>
+      </div>
+      <aside class="notes">
+        四大亮点：分层架构、正交 Agent、三阶段压缩、工程化配套。
+        这些不仅是课程作业的完成度体现，也是工程上可以继续扩展的基础。
+      </aside>
+    </section>
+
+    <!-- 13 功能演示（一）登录 + 商品推荐（微信小程序真实截图） -->
+    <section>
+      <div class="chapter-bar"><span class="num">03</span> / 功能演示</div>
+      <div class="slide-title"><h2>功能演示（一）登录 &amp; 商品推荐</h2><span class="sub">微信小程序 · 真机截图</span></div>
+      <div class="grid cols-2" style="grid-template-columns:0.72fr 1.28fr;gap:22px;align-items:center;">
+        <div class="fig" style="margin-top:0;flex-direction:column;">
+          <img src="assets/shot-miniapp-login.png" alt="小程序登录页" style="max-height:460px;"/>
+          <p style="font-size:13px;color:var(--c-muted);margin-top:6px;text-align:center;">登录 / 注册页（JWT 鉴权）</p>
+        </div>
+        <div class="fig" style="margin-top:0;flex-direction:column;">
+          <img src="assets/shot-rag-result.png" alt="RAG 推荐结果" style="max-height:460px;"/>
+          <p style="font-size:13px;color:var(--c-muted);margin-top:6px;text-align:center;">RAG 推荐结果：用户问"推荐 400 元键盘" → 返回 ikbc C87 完整推荐话术</p>
+        </div>
+      </div>
+      <aside class="notes">
+        这一页是微信小程序端的真实运行截图。左图是登录页，携带 JWT Bearer Token
+        调用后端统一接口；右图是商品推荐场景——用户提问"推荐 400 元左右的键盘"，
+        系统经 RouterAgent 识别为 product_recommend 意图，RAGAgent 在 ChromaDB 中
+        检索召回，再由 LLM 生成结构化的推荐话术：首选、价格、特点、适合人群与其他选项对比。
+      </aside>
+    </section>
+
+    <!-- 14 功能演示（二）Streamlit 开发端 -->
+    <section>
+      <div class="chapter-bar"><span class="num">03</span> / 功能演示</div>
+      <div class="slide-title"><h2>功能演示（二）开发端 &amp; 场景</h2><span class="sub">Streamlit 真实截图 + 三大场景</span></div>
+      <div class="grid cols-2" style="grid-template-columns:1.35fr 1fr;gap:20px;align-items:center;">
+        <div class="fig" style="margin-top:0;flex-direction:column;">
+          <img src="assets/shot-streamlit.png" alt="Streamlit 开发联调页" style="max-height:460px;"/>
+          <p style="font-size:13px;color:var(--c-muted);margin-top:6px;text-align:center;">
+            Streamlit 联调页：左侧登录态 + 后端健康，右侧完整 RAG 对话，带 <code>识别意图</code> &amp; <code>使用工具</code> 标签
+          </p>
+        </div>
+        <div>
+          <div class="card"><h4>A · 订单查询（Tool Calling）</h4><p>"ORD123 到哪了？" → Router → OrderAgent → <code>get_order_status</code> → SQLite。</p></div>
+          <div class="card" style="margin-top:8px;"><h4>B · 商品推荐（RAG）</h4><p>"300 元左右的键盘" → RAGAgent → Top-K → LLM 生成推荐。</p></div>
+          <div class="card" style="margin-top:8px;"><h4>C · 多轮压缩（Memory）</h4><p>早期历史触发 LLM 摘要，Token 占用维持稳定区间。</p></div>
+          <div class="card" style="margin-top:8px;border-left-color:var(--c-primary);">
+            <h4>可视化要点</h4>
+            <p style="font-size:14px;">截图下方的 <em>识别意图</em> 与 <em>使用工具</em> 标签，能直观证明路由分发与工具调用真实发生，而非凭空生成。</p>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        Streamlit 是开发阶段的联调前端，不作为正式演示界面。
+        这张截图里重点强调两处标签：「识别意图：product_recommend」和「使用工具：product_search」，
+        它们证明 RouterAgent 确实做了意图分类，RAGAgent 确实调用了底层检索能力。
+        三大场景——订单、推荐、多轮，分别对应 Tool Calling、RAG、Memory 三项核心能力。
+      </aside>
+    </section>
+
+    <!-- 14 总结与后续 -->
+    <section>
+      <div class="chapter-bar"><span class="num">04</span> / 总结与展望</div>
+      <div class="slide-title"><h2>项目总结与后续工作</h2><span class="sub">Summary & Roadmap</span></div>
+      <div class="split">
+        <div class="done">
+          <h4>✅ 已完成</h4>
+          <ul>
+            <li>FastAPI 完整后端 + 5 个聊天端点</li>
+            <li>Tool Calling 订单查询链路</li>
+            <li>ChromaDB + SiliconFlow 的 RAG 推荐</li>
+            <li>Router Agent 意图路由</li>
+            <li>Agent Memory 阶段 1 / 2 / 3</li>
+            <li>Streamlit 前端 + JWT 认证</li>
+            <li>微信小程序前端（登录、对话、意图标签）</li>
+            <li>启动配置校验 + 日志/限流中间件</li>
+          </ul>
+        </div>
+        <div class="todo">
+          <h4>⏳ 后续工作</h4>
+          <ul>
+            <li>Memory 阶段 4：会话持久化（ChatSession 表）</li>
+            <li>JWT 签名验证 + 密码 bcrypt/argon2 升级</li>
+            <li>意图分类合并为单次 tool_choice，降低延迟</li>
+            <li>产品数据源（CSV 与 DB）统一同步机制</li>
+            <li>流式响应 / WebSocket 实时聊天</li>
+            <li>Dockerfile + 部署脚本 + 测试补全</li>
+          </ul>
+        </div>
+      </div>
+      <aside class="notes">
+        左边是已交付的功能清单，对应 todo.md 打勾的部分以及 AGENT_MEMORY_PLAN.md 的阶段 1-3；
+        右边是 to-fix.md 中识别到的待完善项，优先级较高的是会话持久化和 JWT 签名升级。
+        这既是课程作业的收尾，也是继续演进的蓝图。
+      </aside>
+    </section>
+
+    <!-- 15 致谢 & Q&A -->
+    <section data-background-color="#F8FAFC">
+      <div class="qa">
+        <div class="big">Q<span>&</span>A</div>
+        <div class="t">感谢聆听，欢迎提问与指导</div>
+        <div class="thanks">谢&nbsp;&nbsp;谢</div>
+        <div style="margin-top:40px;color:var(--c-muted);font-size:14px;">
+          项目仓库：<b style="color:var(--c-primary);">Shop-Agent · main 分支</b>
+        </div>
+      </div>
+      <aside class="notes">
+        汇报到此结束，感谢老师和同学们的聆听。欢迎针对架构、RAG 召回策略、
+        Memory 压缩效果等任意方向提问。
+      </aside>
+    </section>
+
+  </div>
+</div>
+
+<!-- 全局页脚 -->
+<div class="footer">
+  <span class="brand">Shop Agent · 电商管理客服系统 · 课程汇报</span>
+  <span id="page-indicator">· 2026 ·</span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.6.1/plugin/notes/notes.js"></script>
+<script>
+  Reveal.initialize({
+    hash:true,
+    slideNumber:'c/t',
+    transition:'slide',
+    transitionSpeed:'default',
+    controls:true,
+    progress:true,
+    center:false,
+    width:1280,
+    height:760,
+    margin:0.06,
+    plugins:[ RevealNotes ]
+  });
+</script>
+</body>
+</html>

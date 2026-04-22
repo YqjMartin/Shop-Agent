@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" font-family="PingFang SC, Microsoft YaHei, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F3A68"/>
+    </marker>
+    <style>
+      .layer { fill:#F8FAFC; stroke:#1F3A68; stroke-width:1.5; rx:10; ry:10; }
+      .lbl { fill:#1F3A68; font-size:14px; font-weight:700; }
+      .box { fill:#FFFFFF; stroke:#2E86C1; stroke-width:1.5; rx:8; ry:8; }
+      .boxtxt { fill:#1F3A68; font-size:14px; font-weight:600; text-anchor:middle; }
+      .sub { fill:#566573; font-size:12px; text-anchor:middle; }
+      .flow { stroke:#1F3A68; stroke-width:1.6; fill:none; }
+      .accent { fill:#2E86C1; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text x="480" y="28" text-anchor="middle" fill="#1F3A68" font-size="18" font-weight="700">Shop Agent 系统整体架构</text>
+
+  <!-- Layer 1: Client -->
+  <rect class="layer" x="30" y="60" width="900" height="70"/>
+  <text class="lbl" x="50" y="82">前端层</text>
+  <rect class="box" x="380" y="75" width="200" height="40"/>
+  <text class="boxtxt" x="480" y="100">Streamlit 聊天界面</text>
+  <text class="sub" x="480" y="122">登录 / 注册 / 对话 / 意图标签</text>
+
+  <!-- Layer 2: API / Middleware -->
+  <rect class="layer" x="30" y="150" width="900" height="80"/>
+  <text class="lbl" x="50" y="172">API 层</text>
+  <rect class="box" x="120" y="170" width="150" height="40"/>
+  <text class="boxtxt" x="195" y="195">FastAPI Router</text>
+  <rect class="box" x="290" y="170" width="150" height="40"/>
+  <text class="boxtxt" x="365" y="195">JWT 认证</text>
+  <rect class="box" x="460" y="170" width="150" height="40"/>
+  <text class="boxtxt" x="535" y="195">请求日志中间件</text>
+  <rect class="box" x="630" y="170" width="150" height="40"/>
+  <text class="boxtxt" x="705" y="195">速率限制中间件</text>
+  <rect class="box" x="800" y="170" width="110" height="40"/>
+  <text class="boxtxt" x="855" y="195">监控 /health</text>
+
+  <!-- Layer 3: Agent -->
+  <rect class="layer" x="30" y="250" width="900" height="80"/>
+  <text class="lbl" x="50" y="272">Agent 层</text>
+  <rect class="box" x="180" y="270" width="180" height="40" fill="#E8F1FB"/>
+  <text class="boxtxt" x="270" y="295">Router Agent（意图路由）</text>
+  <rect class="box" x="400" y="270" width="180" height="40"/>
+  <text class="boxtxt" x="490" y="295">Order Agent（Tool Calling）</text>
+  <rect class="box" x="620" y="270" width="180" height="40"/>
+  <text class="boxtxt" x="710" y="295">RAG Agent（产品推荐）</text>
+
+  <!-- Layer 4: Service / Data -->
+  <rect class="layer" x="30" y="350" width="900" height="90"/>
+  <text class="lbl" x="50" y="372">服务与数据层</text>
+  <rect class="box" x="110" y="375" width="150" height="50"/>
+  <text class="boxtxt" x="185" y="397">LLM Service</text>
+  <text class="sub" x="185" y="415">DeepSeek API</text>
+  <rect class="box" x="280" y="375" width="150" height="50"/>
+  <text class="boxtxt" x="355" y="397">Embedding</text>
+  <text class="sub" x="355" y="415">SiliconFlow</text>
+  <rect class="box" x="450" y="375" width="150" height="50"/>
+  <text class="boxtxt" x="525" y="397">Vector Store</text>
+  <text class="sub" x="525" y="415">ChromaDB</text>
+  <rect class="box" x="620" y="375" width="150" height="50"/>
+  <text class="boxtxt" x="695" y="397">SQLite + ORM</text>
+  <text class="sub" x="695" y="415">SQLAlchemy</text>
+  <rect class="box" x="790" y="375" width="130" height="50"/>
+  <text class="boxtxt" x="855" y="397">Agent Memory</text>
+  <text class="sub" x="855" y="415">三阶段压缩</text>
+
+  <!-- Connections -->
+  <path class="flow" d="M480 115 V 170" marker-end="url(#arr)"/>
+  <path class="flow" d="M195 210 V 290 H 180" marker-end="url(#arr)"/>
+  <path class="flow" d="M270 310 V 375 H 185" marker-end="url(#arr)"/>
+  <path class="flow" d="M490 310 V 375 H 525" marker-end="url(#arr)"/>
+  <path class="flow" d="M710 310 V 375 H 695" marker-end="url(#arr)"/>
+  <path class="flow" d="M460 290 H 400" marker-end="url(#arr)"/>
+  <path class="flow" d="M580 290 H 620" marker-end="url(#arr)"/>
+</svg>

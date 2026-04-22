@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" font-family="PingFang SC, Microsoft YaHei, sans-serif">
+  <defs>
+    <marker id="arr4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F3A68"/>
+    </marker>
+    <style>
+      .card { fill:#FFFFFF; stroke:#2E86C1; stroke-width:1.6; rx:12; ry:12; }
+      .head { fill:#1F3A68; }
+      .headtxt { fill:#FFFFFF; font-size:15px; font-weight:700; text-anchor:middle; }
+      .title { fill:#1F3A68; font-size:16px; font-weight:700; text-anchor:middle; }
+      .body { fill:#2C3E50; font-size:13px; }
+      .muted { fill:#566573; font-size:12px; }
+      .flow { stroke:#1F3A68; stroke-width:1.8; fill:none; }
+    </style>
+  </defs>
+
+  <text x="480" y="28" text-anchor="middle" fill="#1F3A68" font-size="18" font-weight="700">Agent Memory 三阶段压缩策略</text>
+
+  <!-- Card 1 -->
+  <rect class="card" x="40" y="70" width="270" height="250"/>
+  <rect class="head" x="40" y="70" width="270" height="36" rx="12" ry="12"/>
+  <rect class="head" x="40" y="94" width="270" height="12"/>
+  <text class="headtxt" x="175" y="94">阶段 1 · Buffer 策略</text>
+  <text class="title" x="175" y="140">规则截断</text>
+  <text class="body" x="60" y="172">• 最近 3 轮完整保留</text>
+  <text class="body" x="60" y="196">• 第 4-8 轮仅保留摘要</text>
+  <text class="body" x="60" y="220">• 第 9 轮及更早删除</text>
+  <text class="body" x="60" y="244">• Tool / RAG 结果标记</text>
+  <text class="body" x="60" y="268">    为「关键」保留</text>
+  <text class="muted" x="60" y="300">对应：agent_memory.py</text>
+
+  <!-- Card 2 -->
+  <rect class="card" x="345" y="70" width="270" height="250"/>
+  <rect class="head" x="345" y="70" width="270" height="36" rx="12" ry="12" fill="#2E86C1"/>
+  <rect class="head" x="345" y="94" width="270" height="12" fill="#2E86C1"/>
+  <text class="headtxt" x="480" y="94">阶段 2 · 场景感知</text>
+  <text class="title" x="480" y="140">结构化提取</text>
+  <text class="body" x="365" y="172">• 自动识别对话模式</text>
+  <text class="body" x="365" y="196">    order / product / general</text>
+  <text class="body" x="365" y="220">• 抽取关键字段：</text>
+  <text class="body" x="365" y="244">    订单号 / 状态 / 物流</text>
+  <text class="body" x="365" y="268">    商品 / 类目 / 预算</text>
+  <text class="muted" x="365" y="300">Pattern detection ≥ 95%</text>
+
+  <!-- Card 3 -->
+  <rect class="card" x="650" y="70" width="270" height="250"/>
+  <rect class="head" x="650" y="70" width="270" height="36" rx="12" ry="12" fill="#1F3A68"/>
+  <rect class="head" x="650" y="94" width="270" height="12" fill="#1F3A68"/>
+  <text class="headtxt" x="785" y="94">阶段 3 · LLM 压缩</text>
+  <text class="title" x="785" y="140">智能摘要</text>
+  <text class="body" x="670" y="172">• 超阈值触发 LLM 压缩</text>
+  <text class="body" x="670" y="196">• 早期多轮 → 50 字摘要</text>
+  <text class="body" x="670" y="220">• 摘要 + 最近 N 轮拼装</text>
+  <text class="body" x="670" y="244">• 压缩耗时 P99 &lt; 1s</text>
+  <text class="muted" x="670" y="300">对应：summary_service.py</text>
+
+  <!-- Arrow between cards -->
+  <path class="flow" d="M310 200 H 345" marker-end="url(#arr4)"/>
+  <path class="flow" d="M615 200 H 650" marker-end="url(#arr4)"/>
+
+  <!-- Bottom callout -->
+  <text x="480" y="348" text-anchor="middle" fill="#566573" font-size="13">
+    预期收益（来自 AGENT_MEMORY_PLAN.md）：30 轮对话 Token ↓80%，API 成本 ↓76%
+  </text>
+</svg>
